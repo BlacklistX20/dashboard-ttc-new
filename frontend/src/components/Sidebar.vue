@@ -18,33 +18,52 @@
     <!-- MENU ITEMS -->
     <nav class="flex-1 py-6 flex flex-col gap-2 px-3 overflow-hidden">
       
-      <!-- Menu: Dashboard (Aktif - Dengan Aksen Merah Telkomsel) -->
-      <a href="#" class="flex items-center gap-4 px-3 py-3 bg-slate-800 border-l-4 border-[#ED1C24] text-white rounded-r-xl transition-all whitespace-nowrap">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="3" width="7" height="9"></rect>
-          <rect x="14" y="3" width="7" height="5"></rect>
-          <rect x="14" y="12" width="7" height="9"></rect>
-          <rect x="3" y="16" width="7" height="5"></rect>
-        </svg>
-        <span class="font-semibold transition-opacity duration-300" :class="isHovered ? 'opacity-100' : 'opacity-0'">Dashboard</span>
-      </a>
+      <!-- Menu: Dashboard -->
+      <router-link to="/" v-slot="{ isActive, href, navigate }">
+        <a :href="href" @click="navigate" 
+           class="flex items-center gap-4 px-3 py-3 transition-all whitespace-nowrap"
+           :class="isActive 
+              ? 'bg-slate-800 border-l-4 border-[#ED1C24] text-white rounded-r-xl ml-0' 
+              : 'text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl ml-1'">
+          <LayoutDashboard class="w-6 h-6 flex-shrink-0" />
+          <span class="font-medium transition-opacity duration-300" :class="isHovered ? 'opacity-100' : 'opacity-0'">Dashboard</span>
+        </a>
+      </router-link>
 
-      <!-- Menu: Kelistrikan -->
-      <a href="#" class="flex items-center gap-4 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors whitespace-nowrap ml-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
-        </svg>
-        <span class="font-medium transition-opacity duration-300" :class="isHovered ? 'opacity-100' : 'opacity-0'">Kelistrikan Gedung</span>
-      </a>
+      <!-- Menu: Kelistrikan Gedung -->
+      <router-link to="/kelistrikan" v-slot="{ isActive, href, navigate }">
+        <a :href="href" @click="navigate" 
+           class="flex items-center gap-4 px-3 py-3 transition-all whitespace-nowrap"
+           :class="isActive 
+              ? 'bg-slate-800 border-l-4 border-[#ED1C24] text-white rounded-r-xl ml-0' 
+              : 'text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl ml-1'">
+          <Zap class="w-6 h-6 flex-shrink-0" />
+          <span class="font-medium transition-opacity duration-300" :class="isHovered ? 'opacity-100' : 'opacity-0'">Kelistrikan Gedung</span>
+        </a>
+      </router-link>
+      <!-- Menu: Tangki BBM -->
+      <router-link to="/tangki" v-slot="{ isActive, href, navigate }">
+        <a :href="href" @click="navigate" 
+           class="flex items-center gap-4 px-3 py-3 transition-all whitespace-nowrap"
+           :class="isActive 
+              ? 'bg-slate-800 border-l-4 border-[#ED1C24] text-white rounded-r-xl ml-0' 
+              : 'text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl ml-1'">
+          <Cylinder class="w-6 h-6 flex-shrink-0" />
+          <span class="font-medium transition-opacity duration-300" :class="isHovered ? 'opacity-100' : 'opacity-0'">Tangki BBM</span>
+        </a>
+      </router-link>
 
-      <!-- Menu: Kontrol -->
-      <a href="#" class="flex items-center gap-4 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors whitespace-nowrap ml-1">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-        </svg>
-        <span class="font-medium transition-opacity duration-300" :class="isHovered ? 'opacity-100' : 'opacity-0'">Sistem Kontrol</span>
-      </a>
+      <!-- Menu: Sistem Kontrol -->
+      <router-link to="/kontrol" v-slot="{ isActive, href, navigate }">
+        <a :href="href" @click="navigate" 
+           class="flex items-center gap-4 px-3 py-3 transition-all whitespace-nowrap"
+           :class="isActive 
+              ? 'bg-slate-800 border-l-4 border-[#ED1C24] text-white rounded-r-xl ml-0' 
+              : 'text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl ml-1'">
+          <SlidersHorizontal class="w-6 h-6 flex-shrink-0" />
+          <span class="font-medium transition-opacity duration-300" :class="isHovered ? 'opacity-100' : 'opacity-0'">Sistem Kontrol</span>
+        </a>
+      </router-link>
 
     </nav>
   </aside>
@@ -52,5 +71,8 @@
 
 <script setup>
 import { ref } from 'vue'
+// Import komponen ikon dari Lucide
+import { LayoutDashboard, Zap, SlidersHorizontal, Cylinder } from '@lucide/vue'
+
 const isHovered = ref(false)
 </script>
