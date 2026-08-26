@@ -2,7 +2,7 @@
   <div class="bg-white rounded-2xl shadow-sm border border-slate-100 flex flex-col h-full overflow-hidden hover:shadow-md transition-shadow duration-300">
     
     <!-- HEADER -->
-    <div v-if="$slots.header || title" class="px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+    <div v-if="$slots.header || title" class="px-6 py-3 border-b border-slate-100 bg-slate-50/50">
       <slot name="header">
         <h2 class="text-sm font-bold text-slate-700 uppercase tracking-wider">{{ title }}</h2>
       </slot>
