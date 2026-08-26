@@ -5,6 +5,7 @@ import TangkiView from '../views/TangkiView.vue'
 import SuhuView from '../views/SuhuView.vue'
 import KontrolValveView from '../views/KontrolValveView.vue'
 import KontrolPacView from '../views/KontrolPacView.vue'
+import PotensiView from '../views/PotensiView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -14,7 +15,8 @@ const router = createRouter({
     { path: '/tangki', name: 'tangki', component: TangkiView },
     { path: '/suhu', name: 'suhu', component: SuhuView },
     { path: '/valve', name: 'valve', component: KontrolValveView },
-    { path: '/pac', name: 'pac', component: KontrolPacView }
+    { path: '/pac', name: 'pac', component: KontrolPacView },
+    { path: '/potensi/:kategori', name: 'potensi', component: PotensiView }
     // ... route lain ...
   ]
 })
