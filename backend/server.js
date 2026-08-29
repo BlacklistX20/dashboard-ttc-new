@@ -2,10 +2,10 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-const { dbFuel, dbPotency, dbPower, dbTemp } = require('./src/config/database');
+const { dbFuel, dbPotency, dbPower, dbTemp, dbGas } = require('./src/config/database');
+const dashboardRoutes = require('./src/routes/dashboardRoutes');
 
 const app = express();
-
 app.use(cors());
 app.use(express.json());
 
@@ -16,17 +16,18 @@ const testConnections = async () => {
     await dbPotency.authenticate();
     await dbPower.authenticate();
     await dbTemp.authenticate();
-    console.log('✅ Berhasil terhubung ke 4 Database (Fuel, Potency, Power, Temp)!');
+    await dbGas.authenticate();
+    console.log('✅ Berhasil terhubung ke 5 Database (Fuel, Potency, Power, Temp, Gas)!');
   } catch (error) {
     console.error('❌ Gagal terhubung ke database:', error);
   }
 };
-
 testConnections();
 
-app.get('/', (req, res) => {
-  res.send('TTC Sudiang Backend API is Running!');
-});
+app.use('/api/dashboard', dashboardRoutes);
+
+
+// ==========================================
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
