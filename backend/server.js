@@ -1,9 +1,11 @@
-const express = require('express');
-const cors = require('cors');
 require('dotenv').config();
 
+const express = require('express');
+const cors = require('cors');
 const { dbFuel, dbPotency, dbPower, dbTemp, dbGas } = require('./src/config/database');
+
 const dashboardRoutes = require('./src/routes/dashboardRoutes');
+const kelistrikanRoutes = require('./src/routes/kelistrikanRoutes');
 
 const app = express();
 app.use(cors());
@@ -25,7 +27,7 @@ const testConnections = async () => {
 testConnections();
 
 app.use('/api/dashboard', dashboardRoutes);
-
+app.use('/api/kelistrikan', kelistrikanRoutes);
 
 // ==========================================
 
