@@ -58,8 +58,15 @@
 
           <router-link to="/tangki" v-slot="{ isActive, href, navigate }">
             <a :href="href" @click="navigate" class="flex items-center gap-3 py-2 px-3 rounded-lg transition-colors text-sm" :class="isActive ? 'bg-[#ED1C24] text-white font-bold shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-700'">
-              <Cylinder class="w-4 h-4 flex-shrink-0" />
+              <Fuel class="w-4 h-4 flex-shrink-0" />
               <span>Tangki BBM</span>
+            </a>
+          </router-link>
+
+          <router-link to="/gas" v-slot="{ isActive, href, navigate }">
+            <a :href="href" @click="navigate" class="flex items-center gap-3 py-2 px-3 rounded-lg transition-colors text-sm" :class="isActive ? 'bg-[#ED1C24] text-white font-bold shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-700'">
+              <Container class="w-4 h-4 flex-shrink-0" />
+              <span>Environtmen Ruangan</span>
             </a>
           </router-link>
           
@@ -141,8 +148,8 @@ import { useRoute } from 'vue-router'
 // Semua ikon yang dibutuhkan di-import secara bersamaan
 import { 
   LayoutDashboard, Activity, SlidersHorizontal, Database, ChevronDown, 
-  Zap, Thermometer, Cylinder, Droplets, Fan, 
-  Power, Laptop, Snowflake, Flame, Beaker, Shield, Lightbulb, Cog
+  Zap, Thermometer, Fuel, Droplets, Fan, 
+  Power, Laptop, Snowflake, Flame, Beaker, Shield, Lightbulb, Cog, Container
 } from '@lucide/vue'
 
 const route = useRoute()
