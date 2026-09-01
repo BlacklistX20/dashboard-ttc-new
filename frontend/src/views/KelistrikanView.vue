@@ -1,24 +1,7 @@
 <template>
   <div class="p-4 bg-slate-50 min-h-screen relative">
     
-    <!-- ================= FLOATING NOTIFICATION ERROR ================= -->
-    <div 
-      v-if="showErrorNotif" 
-      class="fixed top-0 left-0 right-0 z-[100] flex justify-center pt-6 pointer-events-none"
-    >
-      <div class="pointer-events-auto w-[90%] md:w-max max-w-lg bg-red-600 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center justify-between gap-4 animate-slide-down-center border border-red-500">
-        <div class="flex items-center gap-4">
-          <div class="bg-red-700 p-2 rounded-lg flex-shrink-0"><AlertTriangle class="w-5 h-5 text-red-100" /></div>
-          <div class="flex flex-col">
-            <span class="text-sm font-bold">Koneksi Backend Terputus!</span>
-            <span class="text-[10px] text-red-200">Gagal mengambil data. Mereset sistem ke nilai 0...</span>
-          </div>
-        </div>
-        <button @click="closeNotif" class="p-1.5 hover:bg-red-700 rounded-full transition-colors flex-shrink-0">
-          <X class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
+    <ConnectionNotif ref="notifRef" />
 
     <!-- HEADER & TAB NAVIGATION + KONTROL -->
     <div class="mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
@@ -226,8 +209,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import Card from '@/components/Card.vue'
+import ConnectionNotif from '@/components/ConnectionNotif.vue'
 import api from '@/services/api'
-import { Download, X, Loader2, AlertTriangle } from '@lucide/vue'
+import { Download, X, Loader2 } from '@lucide/vue'
 
 // --- STATE NAVIGASI & NOTIFIKASI ---
 const activeTab = ref('panel')
@@ -237,13 +221,7 @@ const selectedRange = ref('1h')
 const ranges = ref([{ label: '1 Jam', value: '1h' }, { label: '1 Hari', value: '1d' }, { label: '1 Minggu', value: '1w' }])
 
 const apiError = ref(false)
-const showErrorNotif = ref(false)
-let notifTimeout = null
-
-const closeNotif = () => {
-  showErrorNotif.value = false
-  if (notifTimeout) clearTimeout(notifTimeout)
-}
+const notifRef = ref(null)
 
 // --- STATE DATA REALTIME ---
 const pueValue = ref(0)
@@ -266,7 +244,10 @@ const chartRectiSeries = ref([])
 const fetchRealtime = async () => {
   try {
     const res = await api.get('/kelistrikan')
-    if (apiError.value) { apiError.value = false; closeNotif() }
+    if (apiError.value) {
+      apiError.value = false
+      notifRef.value?.showSuccess('Koneksi Tersambung Kembali', 'Data kelistrikan berhasil dimuat ulang.')
+    }
     
     pueValue.value = res.data.pue
     lvmdp.value = res.data.lvmdp
@@ -313,9 +294,7 @@ const changeRange = (val) => {
 const handleApiError = () => {
   if (!apiError.value) {
     apiError.value = true
-    showErrorNotif.value = true
-    if (notifTimeout) clearTimeout(notifTimeout)
-    notifTimeout = setTimeout(() => { showErrorNotif.value = false }, 30000)
+    notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data. Mereset sistem ke nilai 0...')
   }
   
   // Reset Semua Angka ke 0
@@ -400,7 +379,6 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (timer) clearInterval(timer)
-  if (notifTimeout) clearTimeout(notifTimeout)
 })
 
 // --- LOGIKA MODAL DOWNLOAD ---
@@ -438,10 +416,4 @@ const handleDownload = async () => {
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 .animate-zoom-in { animation: zoomIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-
-.animate-slide-down-center { animation: slideDownCenter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-@keyframes slideDownCenter { 
-  from { opacity: 0; transform: translateY(-100%); } 
-  to { opacity: 1; transform: translateY(0); } 
-}
 </style>

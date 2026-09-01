@@ -1,25 +1,7 @@
 <template>
   <div class="p-4 bg-slate-50 min-h-screen relative">
     
-    <!-- ================= FLOATING NOTIFICATION ERROR ================= -->
-    <!-- Wrapper transparan full-screen agar konten selalu di tengah -->
-    <div v-if="showErrorNotif" class="fixed top-0 left-0 right-0 z-[100] flex justify-center pt-6 pointer-events-none">
-      <!-- Box Notifikasi -->
-      <div class="pointer-events-auto w-[90%] md:w-max max-w-lg bg-red-600 text-white px-5 py-3 rounded-xl shadow-2xl flex items-center justify-between gap-4 animate-slide-down-center border border-red-500">
-        <div class="flex items-center gap-4">
-          <div class="bg-red-700 p-2 rounded-lg flex-shrink-0">
-            <AlertTriangle class="w-5 h-5 text-red-100" />
-          </div>
-          <div class="flex flex-col">
-            <span class="text-sm font-bold">Koneksi Backend Terputus!</span>
-            <span class="text-[10px] text-red-200">Gagal mengambil data. Mereset sistem ke nilai 0...</span>
-          </div>
-        </div>
-        <button @click="closeNotif" class="p-1.5 hover:bg-red-700 rounded-full transition-colors flex-shrink-0">
-          <X class="w-4 h-4" />
-        </button>
-      </div>
-    </div>
+    <ConnectionNotif ref="notifRef" />
 
     <!-- HEADER -->
     <div class="mb-4">
@@ -166,13 +148,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import Card from '@/components/Card.vue'
+import ConnectionNotif from '@/components/ConnectionNotif.vue'
 import api from '@/services/api' 
 import { AlertTriangle, X } from '@lucide/vue'
 
-// --- STATE API ---
-const apiError = ref(false) // State penanda Error Koneksi Backend (untuk UI / logika 0)
-const showErrorNotif = ref(false) // State khusus untuk menampilkan/menyembunyikan pop-up notifikasi
-let notifTimeout = null // Variabel penyimpan timer 30 detik
+// --- NOTIFIKASI ERROR/RECONNECT KONEKSI (via komponen ConnectionNotif) ---
+const apiError = ref(false)
+const notifRef = ref(null)
 
 const pueStats = ref({ current: 0, min: 0, max: 0 })
 const suhuDC = ref(0)
@@ -191,12 +173,6 @@ const bbmBulananSeries = ref([
   { name: 'Tangki Bulanan 1', data: [0,0,0,0,0,0,0] }, { name: 'Tangki Bulanan 2', data: [0,0,0,0,0,0,0] }, { name: 'Tangki Bulanan 3', data: [0,0,0,0,0,0,0] }
 ])
 
-// --- FUNGSI TUTUP NOTIFIKASI MANUAL ---
-const closeNotif = () => {
-  showErrorNotif.value = false
-  if (notifTimeout) clearTimeout(notifTimeout)
-}
-
 // --- FETCH DATA API BACKEND ---
 const fetchDashboardData = async () => {
   try {
@@ -206,8 +182,7 @@ const fetchDashboardData = async () => {
     // Jika sebelumnya error, pulihkan status notifikasi karena sistem kembali online
     if (apiError.value) {
       apiError.value = false
-      showErrorNotif.value = false
-      if (notifTimeout) clearTimeout(notifTimeout)
+      notifRef.value?.showSuccess('Koneksi Tersambung Kembali', 'Data suhu berhasil dimuat ulang.')
     }
 
     pueStats.value = d.pue
@@ -235,18 +210,10 @@ const fetchDashboardData = async () => {
     }
 
   } catch (error) {
-    // Cegah kemunculan notifikasi berulang jika sistem memang sedang mati panjang
     if (!apiError.value) {
       apiError.value = true
-      showErrorNotif.value = true
-      
-      // Hitung mundur 30 detik untuk menyembunyikan notifikasi error
-      if (notifTimeout) clearTimeout(notifTimeout)
-      notifTimeout = setTimeout(() => {
-        showErrorNotif.value = false
-      }, 30000)
+      notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data suhu. Mereset sistem ke nilai 0...')
     }
-    
     // Reset data UI ke 0
     pueStats.value = { current: 0, min: 0, max: 0 }
     suhuDC.value = 0
@@ -290,7 +257,6 @@ onMounted(() => {
 
 onUnmounted(() => { 
   if (timer) clearInterval(timer) 
-  if (notifTimeout) clearTimeout(notifTimeout) // Bersihkan memory leak timer
 })
 
 // --- LOGIKA STATUS WARNA GAS ---
@@ -349,13 +315,8 @@ const bbmBulananOptions = ref({
 </script>
 
 <style scoped>
-.animate-fade-in { animation: fadeIn 0.4s ease-out; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-/* CSS Baru yang memastikan posisi tidak tergeser ke kiri */
-.animate-slide-down-center { animation: slideDownCenter 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-@keyframes slideDownCenter { 
-  from { opacity: 0; transform: translateY(-100%); } 
-  to { opacity: 1; transform: translateY(0); } 
-}
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+.animate-zoom-in { animation: zoomIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 </style>
