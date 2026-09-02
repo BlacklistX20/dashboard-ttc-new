@@ -7,6 +7,7 @@ const { dbFuel, dbPotency, dbPower, dbTemp, dbGas } = require('./src/config/data
 const dashboardRoutes = require('./src/routes/dashboardRoutes');
 const kelistrikanRoutes = require('./src/routes/kelistrikanRoutes');
 const suhuRoutes = require('./src/routes/SuhuRoutes');
+const tangkiRoutes = require('./src/routes/tangkiRoutes');
 
 const app = express();
 app.use(cors());
@@ -30,6 +31,7 @@ testConnections();
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/kelistrikan', kelistrikanRoutes);
 app.use('/api/suhu', suhuRoutes);
+app.use('/api/tangki', tangkiRoutes);
 
 // ==========================================
 
