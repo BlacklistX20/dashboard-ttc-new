@@ -1,7 +1,7 @@
 const { Pue, PerSecond: PowerPerSecond } = require('../models/Power');
 const { TempPerSecond } = require('../models/Temp');
 const { Daily, Monthly } = require('../models/Fuel');
-const { Co2Data } = require('../models/Gas');
+const { PerSecond: GasPerSecond } = require('../models/Gas'); // Perbarui import model Gas
 
 exports.getDashboardData = async (req, res) => {
   try {
@@ -9,7 +9,6 @@ exports.getDashboardData = async (req, res) => {
     // 1. STATISTIK PUE (Database: power, Tabel: pue)
     // -------------------------------------------------------------
     const pueRecords = await Pue.findAll({ limit: 7, order: [['id', 'DESC']] });
-    // Dibalik (reverse) agar urutan dari yang terlama ke terbaru untuk grafik
     const pueChartData = pueRecords.map(r => parseFloat(r.pue)).reverse(); 
     
     const currentPue = pueChartData.length > 0 ? pueChartData[pueChartData.length - 1] : 0;
@@ -43,21 +42,28 @@ exports.getDashboardData = async (req, res) => {
     // -------------------------------------------------------------
     // 5. ENVIRONMENT GEDUNG (Database: gas & Mock Data)
     // -------------------------------------------------------------
-    // Mengambil data CO2 terbaru
-    const latestCo2 = await Co2Data.findOne({ order: [['recorded_at', 'DESC']] });
-    const co2RuangControl = latestCo2 ? latestCo2.co2_ppm : 0;
+    // Mengambil semua baris data realtime per_second dari DB gas sekaligus
+    const gasRealtime = await GasPerSecond.findAll();
+
+    // Fungsi helper untuk mencari gas & ruangan tertentu lalu merata-ratakan nilai sensornya
+    const getGasAvg = (gasType, roomName, decimals = 0) => {
+      const record = gasRealtime.find(r => r.gas === gasType && r.room === roomName);
+      if (!record) return 0;
+      const avg = (parseFloat(record.sensor1) + parseFloat(record.sensor2)) / 2;
+      return Number(avg.toFixed(decimals));
+    };
 
     const environment = {
       co2Data: [
-        { name: 'Ruang Control', value: co2RuangControl }, // Asli dari database
-        { name: 'Ruang Vendor', value: 1350 } // Mock
+        { name: 'Ruang Control', value: getGasAvg('co2', 'control') },
+        { name: 'Ruang Vendor', value: getGasAvg('co2', 'vendor') }
       ],
       h2Data: [
-        { name: 'R. Baterai Lt 1', value: 0.2 }, // Mock
-        { name: 'R. Baterai Lt 2', value: 0.8 }, // Mock
-        { name: 'R. Baterai Lt 3', value: 1.2 }, // Mock
-        { name: 'R. Baterai Lt 4', value: 0.15 }, // Mock
-        { name: 'R. Baterai Lt 5', value: 0.25 }  // Mock
+        { name: 'R. Baterai Lt 1', value: 0.2 }, // Mock (Tidak ada di gas.sql)
+        { name: 'R. Baterai Lt 2', value: getGasAvg('hydrogen', 'battery2', 2) },
+        { name: 'R. Baterai Lt 3', value: getGasAvg('hydrogen', 'battery3', 2) },
+        { name: 'R. Baterai Lt 4', value: getGasAvg('hydrogen', 'battery4', 2) },
+        { name: 'R. Baterai Lt 5', value: 0.25 }  // Mock (Tidak ada di gas.sql)
       ],
       coGensetData: [
         { name: 'Genset 1', value: 12 }, // Mock
