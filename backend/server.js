@@ -8,6 +8,7 @@ const dashboardRoutes = require('./src/routes/dashboardRoutes');
 const kelistrikanRoutes = require('./src/routes/kelistrikanRoutes');
 const suhuRoutes = require('./src/routes/SuhuRoutes');
 const tangkiRoutes = require('./src/routes/tangkiRoutes');
+const gasRoutes = require('./src/routes/gasRoutes'); 
 
 const app = express();
 app.use(cors());
@@ -32,6 +33,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/kelistrikan', kelistrikanRoutes);
 app.use('/api/suhu', suhuRoutes);
 app.use('/api/tangki', tangkiRoutes);
+app.use('/api/gas', gasRoutes); 
 
 // ==========================================
 
