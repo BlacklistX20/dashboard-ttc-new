@@ -40,7 +40,7 @@ exports.getDashboardData = async (req, res) => {
     const monthlyRecords = await Monthly.findAll({ limit: 7, order: [['id', 'DESC']] });
 
     // -------------------------------------------------------------
-    // 5. ENVIRONMENT GEDUNG (Database: gas & Mock Data)
+    // 5. ENVIRONMENT GEDUNG (Database: gas)
     // -------------------------------------------------------------
     // Mengambil semua baris data realtime per_second dari DB gas sekaligus
     const gasRealtime = await GasPerSecond.findAll();
@@ -48,7 +48,10 @@ exports.getDashboardData = async (req, res) => {
     // Fungsi helper untuk mencari gas & ruangan tertentu lalu merata-ratakan nilai sensornya
     const getGasAvg = (gasType, roomName, decimals = 0) => {
       const record = gasRealtime.find(r => r.gas === gasType && r.room === roomName);
-      if (!record) return 0;
+      
+      // Mengembalikan null agar frontend bisa menampilkan status "Tidak ada data" / Offline
+      if (!record) return null; 
+      
       const avg = (parseFloat(record.sensor1) + parseFloat(record.sensor2)) / 2;
       return Number(avg.toFixed(decimals));
     };
@@ -59,16 +62,17 @@ exports.getDashboardData = async (req, res) => {
         { name: 'Ruang Vendor', value: getGasAvg('co2', 'vendor') }
       ],
       h2Data: [
-        { name: 'R. Baterai Lt 1', value: 0.2 }, // Mock (Tidak ada di gas.sql)
         { name: 'R. Baterai Lt 2', value: getGasAvg('hydrogen', 'battery2', 2) },
         { name: 'R. Baterai Lt 3', value: getGasAvg('hydrogen', 'battery3', 2) },
         { name: 'R. Baterai Lt 4', value: getGasAvg('hydrogen', 'battery4', 2) },
-        { name: 'R. Baterai Lt 5', value: 0.25 }  // Mock (Tidak ada di gas.sql)
+        { name: 'Utility A Lt 5', value: getGasAvg('hydrogen', 'utilityA5', 2) },
+        { name: 'Utility B Lt 5', value: getGasAvg('hydrogen', 'utilityB5', 2) }
       ],
       coGensetData: [
-        { name: 'Genset 1', value: 12 }, // Mock
-        { name: 'Genset 2', value: 18 }, // Mock
-        { name: 'Genset 3', value: 45 }  // Mock
+        // Membaca nilai CO dari tabel per_second dengan parameter gas='co' dan room='gensetX'
+        { name: 'Genset 1', value: getGasAvg('co', 'genset1') },
+        { name: 'Genset 2', value: getGasAvg('co', 'genset2') },
+        { name: 'Genset 3', value: getGasAvg('co', 'genset3') }
       ]
     };
 

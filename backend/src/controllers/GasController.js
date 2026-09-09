@@ -27,18 +27,26 @@ const formatRoomData = async (roomName, HistoryModel, gasType) => {
     ],
     raw: true
   });
-
-  const rt = realtime || { temp1: 0, temp2: 0, hum1: 0, hum2: 0, sensor1: 0, sensor2: 0 };
   const st = stats[0] || {};
 
-  const avgTemp = ((parseFloat(rt.temp1) + parseFloat(rt.temp2)) / 2).toFixed(1);
-  const avgHum = ((parseFloat(rt.hum1) + parseFloat(rt.hum2)) / 2).toFixed(1);
-  const avgGas = ((parseFloat(rt.sensor1) + parseFloat(rt.sensor2)) / 2).toFixed(0);
+  // Jika tabel per_second tidak memiliki data (kosong), kembalikan null
+  if (!realtime) {
+    return {
+      temp: { current: null, sensors: [{ value: null }, { value: null }], min: st.minTemp || null, max: st.maxTemp || null },
+      humidity: { current: null, sensors: [{ value: null }, { value: null }], min: st.minHum || null, max: st.maxHum || null },
+      gas: { current: null, sensors: [{ value: null }, { value: null }], min: st.minGas || null, max: st.maxGas || null }
+    };
+  }
+
+  // Jika ada datanya, proses seperti biasa
+  const avgTemp = ((parseFloat(realtime.temp1) + parseFloat(realtime.temp2)) / 2).toFixed(1);
+  const avgHum = ((parseFloat(realtime.hum1) + parseFloat(realtime.hum2)) / 2).toFixed(1);
+  const avgGas = ((parseFloat(realtime.sensor1) + parseFloat(realtime.sensor2)) / 2).toFixed(0);
 
   return {
-    temp: { current: avgTemp, sensors: [{ value: rt.temp1 }, { value: rt.temp2 }], min: st.minTemp || 0, max: st.maxTemp || 0 },
-    humidity: { current: avgHum, sensors: [{ value: rt.hum1 }, { value: rt.hum2 }], min: st.minHum || 0, max: st.maxHum || 0 },
-    gas: { current: avgGas, sensors: [{ value: rt.sensor1 }, { value: rt.sensor2 }], min: st.minGas || 0, max: st.maxGas || 0 }
+    temp: { current: avgTemp, sensors: [{ value: realtime.temp1 }, { value: realtime.temp2 }], min: st.minTemp || null, max: st.maxTemp || null },
+    humidity: { current: avgHum, sensors: [{ value: realtime.hum1 }, { value: realtime.hum2 }], min: st.minHum || null, max: st.maxHum || null },
+    gas: { current: avgGas, sensors: [{ value: realtime.sensor1 }, { value: realtime.sensor2 }], min: st.minGas || null, max: st.maxGas || null }
   };
 };
 

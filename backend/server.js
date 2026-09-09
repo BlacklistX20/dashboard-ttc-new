@@ -23,6 +23,14 @@ const testConnections = async () => {
     await dbTemp.authenticate();
     await dbGas.authenticate();
     console.log('✅ Berhasil terhubung ke 5 Database (Fuel, Potency, Power, Temp, Gas)!');
+
+    // Tambahkan sinkronisasi tabel di sini (tanpa force: true agar data tidak hilang)
+    await dbFuel.sync();
+    await dbPotency.sync();
+    await dbPower.sync();
+    await dbTemp.sync();
+    await dbGas.sync();
+    console.log('✅ Sinkronisasi semua tabel berhasil!');
   } catch (error) {
     console.error('❌ Gagal terhubung ke database:', error);
   }

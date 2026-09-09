@@ -74,15 +74,15 @@ exports.getRealtime = async (req, res) => {
       for (let i = 1; i <= room.sensorCount; i++) {
         sensors.push({
           name: `Sensor Suhu ${i}`,
-          temp: latest ? parseFloat(latest[`t${i}`]) : 0
+          temp: latest ? parseFloat(latest[`t${i}`]) : null
         });
       }
 
       grouped[room.floor].push({
         id: room.id,
         name: room.label,
-        avgTemp: summary ? parseFloat(summary.temp) : 0,
-        avgHum: summary ? parseFloat(summary.hum) : 0,
+        avgTemp: summary ? parseFloat(summary.temp) : null,
+        avgHum: summary ? parseFloat(summary.hum) : null,
         isConnected: summary ? summary.status === 'C' : false,
         sensors
       });

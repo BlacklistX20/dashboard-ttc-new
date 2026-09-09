@@ -14,19 +14,15 @@ const getLatestFuelData = async (req, res) => {
     const dailyData = await Daily.findByPk(1);
     const monthlyData = await Monthly.findByPk(1);
 
-    if (!dailyData || !monthlyData) {
-      return res.status(404).json({ success: false, message: 'Data ID 1 tidak ditemukan' });
-    }
-
     const tanksHarian = [
-      { name: 'Harian 1', capacity: TANK_CAPACITY.harian.tank1, currentVolume: parseFloat(dailyData.tank1), animatedVolume: 0, animatedPercentage: 0 },
-      { name: 'Harian 2', capacity: TANK_CAPACITY.harian.tank2, currentVolume: parseFloat(dailyData.tank2), animatedVolume: 0, animatedPercentage: 0 }
+      { name: 'Harian 1', capacity: TANK_CAPACITY.harian.tank1, currentVolume: dailyData ? parseFloat(dailyData.tank1) : null, animatedVolume: 0, animatedPercentage: 0 },
+      { name: 'Harian 2', capacity: TANK_CAPACITY.harian.tank2, currentVolume: dailyData ? parseFloat(dailyData.tank2) : null, animatedVolume: 0, animatedPercentage: 0 }
     ];
 
     const tanksBulanan = [
-      { name: 'Bulanan 1', capacity: TANK_CAPACITY.bulanan.tank1, currentVolume: parseFloat(monthlyData.tank1), animatedVolume: 0, animatedPercentage: 0 },
-      { name: 'Bulanan 2', capacity: TANK_CAPACITY.bulanan.tank2, currentVolume: parseFloat(monthlyData.tank2), animatedVolume: 0, animatedPercentage: 0 },
-      { name: 'Bulanan 3', capacity: TANK_CAPACITY.bulanan.tank3, currentVolume: parseFloat(monthlyData.tank3), animatedVolume: 0, animatedPercentage: 0 }
+      { name: 'Bulanan 1', capacity: TANK_CAPACITY.bulanan.tank1, currentVolume: monthlyData ? parseFloat(monthlyData.tank1) : null, animatedVolume: 0, animatedPercentage: 0 },
+      { name: 'Bulanan 2', capacity: TANK_CAPACITY.bulanan.tank2, currentVolume: monthlyData ? parseFloat(monthlyData.tank2) : null, animatedVolume: 0, animatedPercentage: 0 },
+      { name: 'Bulanan 3', capacity: TANK_CAPACITY.bulanan.tank3, currentVolume: monthlyData ? parseFloat(monthlyData.tank3) : null, animatedVolume: 0, animatedPercentage: 0 }
     ];
 
     res.status(200).json({ success: true, tanksHarian, tanksBulanan });

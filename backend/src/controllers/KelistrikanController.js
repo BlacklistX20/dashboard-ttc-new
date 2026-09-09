@@ -59,18 +59,18 @@ exports.getRealtime = async (req, res) => {
 
     const format = (id, defaultName) => ({
       name: map[id] ? map[id].name : defaultName,
-      kva: map[id] ? parseFloat(map[id].loads) : 0,
-      voltage: map[id] ? parseFloat(map[id].voltage) : 0,
-      current: map[id] ? parseFloat(map[id].current) : 0,
-      freq: map[id] ? parseFloat(map[id].frequency) : 0,
+      kva: map[id] ? parseFloat(map[id].loads) : null,
+      voltage: map[id] ? parseFloat(map[id].voltage) : null,
+      current: map[id] ? parseFloat(map[id].current) : null,
+      freq: map[id] ? parseFloat(map[id].frequency) : null,
     });
 
     const formatPanel = (id, defaultName) => ({
       name: map[id] ? map[id].name : defaultName,
-      kva: map[id] ? parseFloat(map[id].loads) : 0,
-      v: map[id] ? parseFloat(map[id].voltage) : 0,
-      a: map[id] ? parseFloat(map[id].current) : 0,
-      hz: map[id] ? parseFloat(map[id].frequency) : 0,
+      kva: map[id] ? parseFloat(map[id].loads) : null,
+      v: map[id] ? parseFloat(map[id].voltage) : null,
+      a: map[id] ? parseFloat(map[id].current) : null,
+      hz: map[id] ? parseFloat(map[id].frequency) : null,
     });
 
     res.json({
