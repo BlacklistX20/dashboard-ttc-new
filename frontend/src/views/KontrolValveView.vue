@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 bg-slate-50 min-h-screen flex flex-col">
+  <div class="p-4 bg-slate-300 min-h-screen flex flex-col">
     
     <!-- HEADER (Margin diperkecil menjadi mb-4) -->
     <div class="mb-2">
@@ -10,7 +10,7 @@
     <!-- KONTEN: 1 Kartu Utama di Tengah (pt-10 dihilangkan agar jarak ke atas merapat) -->
     <div class="flex-1 flex items-start justify-center pt-2">
       
-      <Card title="Panel Kontrol Penyiraman" class="w-full max-w-lg shadow-lg border-t-4 border-t-sky-500 relative overflow-hidden">
+      <Card title="Panel Kontrol Penyiraman" class="w-full max-w-lg shadow-lg border-t-4 relative overflow-hidden">
         
         <!-- Overlay Global Saat Loading (Mencegah klik apapun selama 5 detik) -->
         <div v-if="isLoading" class="absolute inset-0 z-50 bg-slate-50/50 backdrop-blur-[1px] flex flex-col items-center justify-center cursor-wait">

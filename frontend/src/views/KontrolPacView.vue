@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 bg-slate-50 min-h-screen flex flex-col">
+  <div class="p-4 bg-slate-300 min-h-screen flex flex-col">
     
     <!-- HEADER -->
     <div class="mb-2">
@@ -17,7 +17,7 @@
           :key="index" 
           :title="room.name" 
           bodyClass="p-2"
-          class="border-t-4 border-t-sky-500"
+          class="border-t-4"
         >
           <!-- Sensor Suhu (Selalu 2 Sensor) -->
           <div class="grid grid-cols-2 gap-1 mb-2">
@@ -52,7 +52,7 @@
       </div>
 
       <!-- ================= BARIS 2: KARTU PARAMETER OTOMATISASI ================= -->
-      <Card title="Parameter Otomatisasi PAC" bodyClass="p-2" class="border-t-4 border-t-amber-500 relative overflow-hidden">
+      <Card title="Parameter Otomatisasi PAC" bodyClass="p-2" class="border-t-4 relative overflow-hidden">
         
         <!-- Overlay Loading saat menyimpan -->
         <div v-if="isSaving" class="absolute inset-0 z-50 bg-slate-50/70 backdrop-blur-[1px] flex flex-col items-center justify-center cursor-wait">

@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 bg-slate-50 min-h-screen">
+  <div class="p-4 bg-slate-300 min-h-screen">
     
     <!-- HEADER -->
     <div class="mb-6 flex justify-between items-end">
@@ -14,7 +14,7 @@
     </div>
 
     <!-- KARTU TABEL -->
-    <Card class="border-t-4 border-t-slate-800 overflow-hidden" bodyClass="p-0">
+    <Card class="border-t-4 overflow-hidden" bodyClass="p-0">
       
       <!-- Tabel Wrapper agar responsif di layar kecil -->
       <div class="overflow-x-auto">
