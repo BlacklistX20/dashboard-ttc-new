@@ -1,18 +1,20 @@
 <template>
   <div class="p-4 bg-slate-300 min-h-screen flex flex-col">
     
-    <!-- HEADER (Margin diperkecil menjadi mb-4) -->
+    <ConnectionNotif ref="notifRef" />
+
+    <!-- HEADER -->
     <div class="mb-2">
       <h1 class="text-xl font-bold text-slate-800 mb-1">Sistem Kontrol Penyiraman</h1>
       <p class="text-slate-500 text-xs">Panel kendali penyiraman rooftop via Microcontroller (Arduino).</p>
     </div>
 
-    <!-- KONTEN: 1 Kartu Utama di Tengah (pt-10 dihilangkan agar jarak ke atas merapat) -->
-    <div class="flex-1 flex items-start justify-center pt-2">
+    <!-- KONTEN -->
+    <div class="flex-1 flex items-start justify-center pt-2 animate-fade-in">
       
       <Card title="Panel Kontrol Penyiraman" class="w-full max-w-lg shadow-lg border-t-4 relative overflow-hidden">
         
-        <!-- Overlay Global Saat Loading (Mencegah klik apapun selama 5 detik) -->
+        <!-- Overlay Loading saat memproses perintah -->
         <div v-if="isLoading" class="absolute inset-0 z-50 bg-slate-50/50 backdrop-blur-[1px] flex flex-col items-center justify-center cursor-wait">
           <div class="bg-white px-4 py-3 rounded-xl shadow-md border border-slate-200 flex items-center gap-3">
             <Loader2 class="w-5 h-5 text-sky-500 animate-spin" />
@@ -38,7 +40,7 @@
               class="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm cursor-pointer transition-colors"
               :class="isArduinoConnected ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'"
               @click="toggleArduino" 
-              title="Klik untuk simulasi putus/sambung koneksi"
+              title="Klik untuk mengubah status server"
             >
               <div class="relative flex h-2.5 w-2.5">
                 <span v-if="isArduinoConnected" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -48,7 +50,7 @@
             </div>
           </div>
 
-          <!-- 2. STATUS POMPA AIR (Sekarang Otomatis, Tanpa Tombol Switch) -->
+          <!-- 2. STATUS POMPA AIR (Dikendalikan oleh Backend) -->
           <div class="flex items-center justify-between bg-slate-50 p-2 rounded-xl border border-slate-100">
             <div class="flex items-center gap-3">
               <div class="p-2 bg-white rounded-lg shadow-sm border border-slate-200">
@@ -60,7 +62,6 @@
               </div>
             </div>
             
-            <!-- Indikator Pompa (Sama seperti Arduino) -->
             <div 
               class="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm transition-colors"
               :class="isPumpOn ? 'bg-sky-50 border-sky-200 text-sky-700' : 'bg-slate-100 border-slate-200 text-slate-500'"
@@ -75,7 +76,7 @@
 
           <hr class="border-slate-100">
 
-          <!-- 3. TOMBOL PEMBUKAAN VALVE (Logika Tunggal & Loading 5 Detik) -->
+          <!-- 3. TOMBOL KONTROL VALVE -->
           <div>
             <div class="mb-4">
               <p class="text-sm font-bold text-slate-800">Kontrol Valve (Katup Air)</p>
@@ -99,7 +100,6 @@
                 <!-- Background efek air -->
                 <div v-if="valve.isOpen" class="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-sky-200/50 to-transparent"></div>
                 
-                <!-- Ikon akan berubah menjadi loading (spinner) jika sedang diproses -->
                 <Loader2 v-if="isLoading && processingIndex === index" class="w-8 h-8 mb-2 z-10 animate-spin text-sky-500" />
                 <Droplets v-else class="w-8 h-8 mb-2 z-10" :class="valve.isOpen ? 'text-sky-500' : 'text-slate-400'" />
                 
@@ -115,7 +115,7 @@
 
         <template #footer>
           <div class="flex justify-between items-center text-[10px] text-slate-400">
-            <span>Last Command Sync:</span><span class="font-medium text-slate-500">{{ lastUpdated }}</span>
+            <span>Sinkronisasi Terakhir:</span><span class="font-medium text-slate-500">{{ lastUpdated }}</span>
           </div>
         </template>
       </Card>
@@ -125,73 +125,126 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import Card from '@/components/Card.vue'
-import { Cpu, Power, Droplets, Loader2 } from '@lucide/vue' // Import Loader2 untuk spinner animasi
+import ConnectionNotif from '@/components/ConnectionNotif.vue'
+import { Cpu, Power, Droplets, Loader2 } from '@lucide/vue'
+import api from '@/services/api'
+
+// --- NOTIFIKASI ---
+const notifRef = ref(null)
 
 // --- STATE SISTEM ---
-const isArduinoConnected = ref(true)
 const isLoading = ref(false)
 const processingIndex = ref(null)
 
+const isArduinoConnected = ref(false)
+const isPumpOn = ref(false)
 const valves = ref([
-  { name: 'Valve 1', isOpen: false },
-  { name: 'Valve 2', isOpen: false },
-  { name: 'Valve 3', isOpen: false }
+  { code: 'VLV1', name: 'Valve 1', isOpen: false },
+  { code: 'VLV2', name: 'Valve 2', isOpen: false },
+  { code: 'VLV3', name: 'Valve 3', isOpen: false }
 ])
 
-// --- LOGIKA POMPA OTOMATIS ---
-// Pompa akan otomatis ON jika ada SETIDAKNYA SATU valve yang terbuka.
-const isPumpOn = computed(() => {
-  return valves.value.some(valve => valve.isOpen)
-})
+// --- FETCH DATA DARI DATABASE ---
+const fetchStates = async () => {
+  // Jangan tarik data di-background saat user sedang menunggu respons tombol
+  if (isLoading.value) return; 
 
-// --- FUNGSI INTERAKSI ---
-const toggleArduino = () => {
-  if (isLoading.value) return // Cegah klik saat loading
-  isArduinoConnected.value = !isArduinoConnected.value
-  
-  if (!isArduinoConnected.value) {
-    valves.value.forEach(v => v.isOpen = false)
+  try {
+    const res = await api.get('/control/states')
+    if (res.data.success) {
+      const states = res.data.data // Contoh: { ARD1: 1, PMP1: 0, VLV1: 0, ... }
+      
+      isArduinoConnected.value = states['ARD1'] === 1
+      isPumpOn.value = states['PMP1'] === 1
+      
+      valves.value[0].isOpen = states['VLV1'] === 1
+      valves.value[1].isOpen = states['VLV2'] === 1
+      valves.value[2].isOpen = states['VLV3'] === 1
+    }
+  } catch (error) {
+    console.error("Gagal sinkronisasi data kontrol")
   }
 }
 
-const toggleValve = (index) => {
-  if (!isArduinoConnected.value || isLoading.value) return // Cegah klik ganda
+// --- FUNGSI INTERAKSI KE BACKEND ---
+
+// 1. Toggle Arduino Server (Simulasi Putus/Sambung)
+const toggleArduino = async () => {
+  if (isLoading.value) return
+  isLoading.value = true
   
-  isLoading.value = true // Aktifkan overlay loading
-  processingIndex.value = index // Tandai valve mana yang sedang di-klik
-  
-  // Ambil status valve saat ini sebelum ditutup semua
-  const isCurrentlyOpen = valves.value[index].isOpen
-  
-  // 1. Matikan semua valve terlebih dahulu
-  valves.value.forEach(v => v.isOpen = false)
-  
-  // 2. Jika valve yang diklik sebelumnya TERTUTUP, maka buka. 
-  // (Jika sebelumnya TERBUKA, biarkan saja tertutup sesuai logika toggle)
-  if (!isCurrentlyOpen) {
-    valves.value[index].isOpen = true
+  const targetState = isArduinoConnected.value ? 0 : 1
+  try {
+    await api.post('/control/arduino', { state: targetState })
+    await fetchStates()
+    notifRef.value?.showSuccess('Sistem', `Server kontrol ${targetState === 1 ? 'diaktifkan' : 'dimatikan'}`)
+  } catch (error) {
+    notifRef.value?.showError('Error', 'Gagal merubah status server')
+  } finally {
+    isLoading.value = false
   }
+}
+
+// 2. Toggle Valve (Menembak HTTP ke Arduino via Backend)
+const toggleValve = async (index) => {
+  if (!isArduinoConnected.value || isLoading.value) return
   
-  // 3. Jeda eksekusi (Cooldown 5 Detik)
-  setTimeout(() => {
+  isLoading.value = true
+  processingIndex.value = index
+  
+  const targetValve = valves.value[index]
+  // Jika saat ini terbuka (true), perintahnya adalah tutup (0). Sebaliknya buka (1).
+  const targetState = targetValve.isOpen ? 0 : 1
+
+  try {
+    const response = await api.post('/control/valve', {
+      deviceCode: targetValve.code,
+      targetState: targetState
+    })
+
+    if (response.data.success) {
+      notifRef.value?.showSuccess('Sukses', `Perintah eksekusi dikirim ke ${targetValve.name}`)
+      await fetchStates() // Tarik ulang status dari DB (Pompa akan otomatis ON/OFF)
+    }
+  } catch (error) {
+    // Tangkap error dari backend (misal: timeout arduino mati)
+    const errorMsg = error.response?.data?.message || 'Gagal menghubungi Controller Arduino'
+    notifRef.value?.showError('Eksekusi Gagal', errorMsg)
+  } finally {
     isLoading.value = false
     processingIndex.value = null
-  }, 5000)
+  }
 }
 
-// --- SETUP WAKTU UPDATE ---
+// --- SETUP WAKTU UPDATE & POLLING ---
 const lastUpdated = ref('')
 let timer = null
+
 const updateTime = () => {
   const now = new Date()
   const pad = (num) => num.toString().padStart(2, '0')
   lastUpdated.value = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
 }
+
 onMounted(() => {
   updateTime()
-  timer = setInterval(updateTime, 1000)
+  fetchStates()
+  
+  // Sinkronisasi data setiap 3 detik agar dashboard realtime
+  timer = setInterval(() => {
+    updateTime()
+    fetchStates()
+  }, 3000)
 })
-onUnmounted(() => { if (timer) clearInterval(timer) })
+
+onUnmounted(() => { 
+  if (timer) clearInterval(timer) 
+})
 </script>
+
+<style scoped>
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+</style>
