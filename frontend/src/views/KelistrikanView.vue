@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 bg-slate-50 min-h-screen relative">
+  <div class="p-4 bg-slate-300 min-h-screen relative">
     
     <ConnectionNotif ref="notifRef" />
 
@@ -49,7 +49,9 @@
       <!-- Baris 1: PUE -->
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <Card title="PUE Realtime" bodyClass="p-3" class="lg:col-span-1">
-          <p class="text-3xl font-bold text-slate-700 text-center py-2">{{ pueValue }}</p>
+          <p class="font-bold text-center py-2" :class="apiError || pueValue === null ? 'text-xl text-slate-400 italic mt-1' : 'text-3xl text-slate-700'">
+            {{ apiError ? 'Offline' : (pueValue !== null ? pueValue : 'No Data') }}
+          </p>
           <template #footer><div class="flex justify-between items-center text-[9px] text-slate-400"><span>Update:</span><span class="font-medium text-slate-500">{{ lastUpdated }}</span></div></template>
         </Card>
         <Card title="Tren PUE" bodyClass="px-2 pt-2" class="lg:col-span-3">
@@ -61,12 +63,15 @@
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <Card title="LVMDP Realtime" bodyClass="p-3" class="lg:col-span-1">
           <div class="text-center py-1 border-b border-slate-100 mb-2 pb-2">
-            <span class="text-2xl font-bold text-sky-600">{{ lvmdp.kva }}</span><span class="text-xs text-slate-500 ml-1 font-bold">kVA</span>
+            <span class="font-bold" :class="apiError || lvmdp.kva === null ? 'text-lg text-slate-400 italic' : 'text-2xl text-sky-600'">
+              {{ apiError ? 'Offline' : (lvmdp.kva !== null ? lvmdp.kva : 'No Data') }}
+            </span>
+            <span v-if="!apiError && lvmdp.kva !== null" class="text-xs text-slate-500 ml-1 font-bold">kVA</span>
           </div>
           <div class="grid grid-cols-3 text-center gap-1">
-            <div><p class="text-[9px] text-slate-400 font-bold">V</p><p class="text-sm font-bold text-slate-700">{{ lvmdp.voltage }}</p></div>
-            <div class="border-l border-r border-slate-100"><p class="text-[9px] text-slate-400 font-bold">A</p><p class="text-sm font-bold text-slate-700">{{ lvmdp.current }}</p></div>
-            <div><p class="text-[9px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold text-slate-700">{{ lvmdp.freq }}</p></div>
+            <div><p class="text-[9px] text-slate-400 font-bold">V</p><p class="text-sm font-bold" :class="apiError || lvmdp.voltage === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || lvmdp.voltage === null ? '-' : lvmdp.voltage }}</p></div>
+            <div class="border-l border-r border-slate-100"><p class="text-[9px] text-slate-400 font-bold">A</p><p class="text-sm font-bold" :class="apiError || lvmdp.current === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || lvmdp.current === null ? '-' : lvmdp.current }}</p></div>
+            <div><p class="text-[9px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold" :class="apiError || lvmdp.freq === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || lvmdp.freq === null ? '-' : lvmdp.freq }}</p></div>
           </div>
           <template #footer><div class="flex justify-between items-center text-[9px] text-slate-400"><span>Update:</span><span class="font-medium text-slate-500">{{ lastUpdated }}</span></div></template>
         </Card>
@@ -79,12 +84,15 @@
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <Card title="IT Load Realtime" bodyClass="p-3" class="lg:col-span-1">
           <div class="text-center py-1 border-b border-slate-100 mb-2 pb-2">
-            <span class="text-2xl font-bold text-sky-600">{{ itLoad.kva }}</span><span class="text-xs text-slate-500 ml-1 font-bold">kVA</span>
+            <span class="font-bold" :class="apiError || itLoad.kva === null ? 'text-lg text-slate-400 italic' : 'text-2xl text-sky-600'">
+              {{ apiError ? 'Offline' : (itLoad.kva !== null ? itLoad.kva : 'No Data') }}
+            </span>
+            <span v-if="!apiError && itLoad.kva !== null" class="text-xs text-slate-500 ml-1 font-bold">kVA</span>
           </div>
           <div class="grid grid-cols-3 text-center gap-1">
-            <div><p class="text-[9px] text-slate-400 font-bold">V</p><p class="text-sm font-bold text-slate-700">{{ itLoad.voltage }}</p></div>
-            <div class="border-l border-r border-slate-100"><p class="text-[9px] text-slate-400 font-bold">A</p><p class="text-sm font-bold text-slate-700">{{ itLoad.current }}</p></div>
-            <div><p class="text-[9px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold text-slate-700">{{ itLoad.freq }}</p></div>
+            <div><p class="text-[9px] text-slate-400 font-bold">V</p><p class="text-sm font-bold" :class="apiError || itLoad.voltage === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || itLoad.voltage === null ? '-' : itLoad.voltage }}</p></div>
+            <div class="border-l border-r border-slate-100"><p class="text-[9px] text-slate-400 font-bold">A</p><p class="text-sm font-bold" :class="apiError || itLoad.current === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || itLoad.current === null ? '-' : itLoad.current }}</p></div>
+            <div><p class="text-[9px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold" :class="apiError || itLoad.freq === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || itLoad.freq === null ? '-' : itLoad.freq }}</p></div>
           </div>
           <template #footer><div class="flex justify-between items-center text-[9px] text-slate-400"><span>Update:</span><span class="font-medium text-slate-500">{{ lastUpdated }}</span></div></template>
         </Card>
@@ -98,28 +106,34 @@
     <div v-if="activeTab === 'ups'" class="flex flex-col gap-4 animate-fade-in">
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-stretch">
         
-        <!-- Total UPS Load: 1 Kolom, Tinggi mengikuti kontainer sebelah otomatis -->
+        <!-- Total UPS Load -->
         <Card title="Total UPS Load" class="lg:col-span-1 border-l-4 border-l-sky-500" bodyClass="flex flex-col justify-center h-full p-4">
           <div class="text-center py-4 border-b border-slate-100 mb-6 pb-6">
-            <span class="text-5xl font-bold text-sky-600">{{ totalUps.kva }}</span><span class="text-sm text-slate-500 ml-1 font-bold">kVA</span>
+            <span class="font-bold inline-block" :class="apiError || totalUps.kva === null ? 'text-2xl text-slate-400 italic mt-3' : 'text-5xl text-sky-600'">
+              {{ apiError ? 'Offline' : (totalUps.kva !== null ? totalUps.kva : 'No Data') }}
+            </span>
+            <span v-if="!apiError && totalUps.kva !== null" class="text-sm text-slate-500 ml-1 font-bold">kVA</span>
           </div>
           <div class="grid grid-cols-3 text-center gap-1">
-            <div><p class="text-xs text-slate-400 font-bold">V</p><p class="text-xl font-bold text-slate-700">{{ totalUps.voltage }}</p></div>
-            <div class="border-l border-r border-slate-100"><p class="text-xs text-slate-400 font-bold">A</p><p class="text-xl font-bold text-slate-700">{{ totalUps.current }}</p></div>
-            <div><p class="text-xs text-slate-400 font-bold">Hz</p><p class="text-xl font-bold text-slate-700">{{ totalUps.freq }}</p></div>
+            <div><p class="text-xs text-slate-400 font-bold">V</p><p class="text-xl font-bold" :class="apiError || totalUps.voltage === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || totalUps.voltage === null ? '-' : totalUps.voltage }}</p></div>
+            <div class="border-l border-r border-slate-100"><p class="text-xs text-slate-400 font-bold">A</p><p class="text-xl font-bold" :class="apiError || totalUps.current === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || totalUps.current === null ? '-' : totalUps.current }}</p></div>
+            <div><p class="text-xs text-slate-400 font-bold">Hz</p><p class="text-xl font-bold" :class="apiError || totalUps.freq === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || totalUps.freq === null ? '-' : totalUps.freq }}</p></div>
           </div>
         </Card>
 
-        <!-- Kartu UPS Individual: 3 Kolom = Otomatis 2 Baris (3 di atas, 3 di bawah) -->
+        <!-- Kartu UPS Individual -->
         <div class="lg:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-4">
           <Card v-for="ups in upsList" :key="ups.name" :title="ups.name" bodyClass="p-4 flex flex-col justify-center">
             <div class="text-center mb-4">
-              <span class="text-2xl font-bold text-slate-700">{{ ups.kva }}</span><span class="text-xs text-slate-500 ml-1">kVA</span>
+              <span class="font-bold" :class="apiError || ups.kva === null ? 'text-lg text-slate-400 italic' : 'text-2xl text-slate-700'">
+                {{ apiError ? 'Offline' : (ups.kva !== null ? ups.kva : 'No Data') }}
+              </span>
+              <span v-if="!apiError && ups.kva !== null" class="text-xs text-slate-500 ml-1">kVA</span>
             </div>
             <div class="flex justify-between border-t border-slate-50 pt-3 text-center">
-              <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">V</p><p class="text-sm font-bold text-slate-600">{{ ups.v }}</p></div>
-              <div class="w-1/3 border-l border-r border-slate-100"><p class="text-[10px] text-slate-400 font-bold">A</p><p class="text-sm font-bold text-slate-600">{{ ups.a }}</p></div>
-              <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold text-slate-600">{{ ups.hz }}</p></div>
+              <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">V</p><p class="text-sm font-bold" :class="apiError || ups.v === null ? 'text-slate-400' : 'text-slate-600'">{{ apiError || ups.v === null ? '-' : ups.v }}</p></div>
+              <div class="w-1/3 border-l border-r border-slate-100"><p class="text-[10px] text-slate-400 font-bold">A</p><p class="text-sm font-bold" :class="apiError || ups.a === null ? 'text-slate-400' : 'text-slate-600'">{{ apiError || ups.a === null ? '-' : ups.a }}</p></div>
+              <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold" :class="apiError || ups.hz === null ? 'text-slate-400' : 'text-slate-600'">{{ apiError || ups.hz === null ? '-' : ups.hz }}</p></div>
             </div>
           </Card>
         </div>
@@ -131,33 +145,39 @@
       </Card>
     </div>
 
-    <!-- ================= TAB 3: SISTEM RECTIFIER (SARAN 2) ================= -->
+    <!-- ================= TAB 3: SISTEM RECTIFIER ================= -->
     <div v-if="activeTab === 'rectifier'" class="flex flex-col gap-4 animate-fade-in">
       
-      <!-- Grid Utama: 3 Kolom. Otomatis menjadi 2 Baris Sempurna (Total 6 Kartu) -->
+      <!-- Grid Utama: 3 Kolom. -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
         
-        <!-- Kartu 1: Total Rectifier (Di-highlight) -->
+        <!-- Kartu 1: Total Rectifier -->
         <Card title="Total Rectifier Load" class="border-l-4 border-l-sky-500 shadow-md" bodyClass="p-4 flex flex-col justify-center h-full bg-sky-50/30">
           <div class="text-center mb-4">
-            <span class="text-4xl font-bold text-sky-600">{{ totalRecti.kva }}</span><span class="text-xs text-slate-500 ml-1 font-bold">kVA</span>
+            <span class="font-bold inline-block" :class="apiError || totalRecti.kva === null ? 'text-2xl text-slate-400 italic mt-2' : 'text-4xl text-sky-600'">
+              {{ apiError ? 'Offline' : (totalRecti.kva !== null ? totalRecti.kva : 'No Data') }}
+            </span>
+            <span v-if="!apiError && totalRecti.kva !== null" class="text-xs text-slate-500 ml-1 font-bold">kVA</span>
           </div>
           <div class="flex justify-between border-t border-sky-100 pt-3 text-center">
-            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">V</p><p class="text-base font-bold text-slate-700">{{ totalRecti.voltage }}</p></div>
-            <div class="w-1/3 border-l border-r border-sky-100"><p class="text-[10px] text-slate-400 font-bold">A</p><p class="text-base font-bold text-slate-700">{{ totalRecti.current }}</p></div>
-            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">Hz</p><p class="text-base font-bold text-slate-700">{{ totalRecti.freq }}</p></div>
+            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">V</p><p class="text-base font-bold" :class="apiError || totalRecti.voltage === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || totalRecti.voltage === null ? '-' : totalRecti.voltage }}</p></div>
+            <div class="w-1/3 border-l border-r border-sky-100"><p class="text-[10px] text-slate-400 font-bold">A</p><p class="text-base font-bold" :class="apiError || totalRecti.current === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || totalRecti.current === null ? '-' : totalRecti.current }}</p></div>
+            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">Hz</p><p class="text-base font-bold" :class="apiError || totalRecti.freq === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || totalRecti.freq === null ? '-' : totalRecti.freq }}</p></div>
           </div>
         </Card>
 
         <!-- Kartu 2-6: Individual Panel -->
         <Card v-for="recti in rectiList" :key="recti.name" :title="recti.name" bodyClass="p-4 flex flex-col justify-center h-full">
           <div class="text-center mb-4">
-            <span class="text-2xl font-bold text-slate-700">{{ recti.kva }}</span><span class="text-[10px] text-slate-500 ml-1">kVA</span>
+            <span class="font-bold" :class="apiError || recti.kva === null ? 'text-lg text-slate-400 italic' : 'text-2xl text-slate-700'">
+              {{ apiError ? 'Offline' : (recti.kva !== null ? recti.kva : 'No Data') }}
+            </span>
+            <span v-if="!apiError && recti.kva !== null" class="text-[10px] text-slate-500 ml-1">kVA</span>
           </div>
           <div class="flex justify-between border-t border-slate-50 pt-3 text-center">
-            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">V</p><p class="text-sm font-bold text-slate-600">{{ recti.v }}</p></div>
-            <div class="w-1/3 border-l border-r border-slate-100"><p class="text-[10px] text-slate-400 font-bold">A</p><p class="text-sm font-bold text-slate-600">{{ recti.a }}</p></div>
-            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold text-slate-600">{{ recti.hz }}</p></div>
+            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">V</p><p class="text-sm font-bold" :class="apiError || recti.v === null ? 'text-slate-400' : 'text-slate-600'">{{ apiError || recti.v === null ? '-' : recti.v }}</p></div>
+            <div class="w-1/3 border-l border-r border-slate-100"><p class="text-[10px] text-slate-400 font-bold">A</p><p class="text-sm font-bold" :class="apiError || recti.a === null ? 'text-slate-400' : 'text-slate-600'">{{ apiError || recti.a === null ? '-' : recti.a }}</p></div>
+            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold" :class="apiError || recti.hz === null ? 'text-slate-400' : 'text-slate-600'">{{ apiError || recti.hz === null ? '-' : recti.hz }}</p></div>
           </div>
         </Card>
       </div>
@@ -235,28 +255,28 @@ const ranges = ref([
 const apiError = ref(false)
 const notifRef = ref(null)
 
-// --- STATE DATA REALTIME (Termasuk Inisialisasi Offline/Bawaan) ---
-const pueValue = ref(0)
-const lvmdp = ref({ kva: 0, voltage: 0, current: 0, freq: 0 })
-const itLoad = ref({ kva: 0, voltage: 0, current: 0, freq: 0 })
-const totalUps = ref({ kva: 0, voltage: 0, current: 0, freq: 0 })
-const totalRecti = ref({ kva: 0, voltage: 0, current: 0, freq: 0 })
+// --- STATE DATA REALTIME (Diinisialisasi null) ---
+const pueValue = ref(null)
+const lvmdp = ref({ kva: null, voltage: null, current: null, freq: null })
+const itLoad = ref({ kva: null, voltage: null, current: null, freq: null })
+const totalUps = ref({ kva: null, voltage: null, current: null, freq: null })
+const totalRecti = ref({ kva: null, voltage: null, current: null, freq: null })
 
 const defaultUpsList = () => [
-  { name: 'UPS 2.02', kva: 0, v: 0, a: 0, hz: 0 },
-  { name: 'UPS 2.03', kva: 0, v: 0, a: 0, hz: 0 },
-  { name: 'UPS 3.01', kva: 0, v: 0, a: 0, hz: 0 },
-  { name: 'UPS 3.02', kva: 0, v: 0, a: 0, hz: 0 },
-  { name: 'UPS 5.01', kva: 0, v: 0, a: 0, hz: 0 },
-  { name: 'UPS 5.02', kva: 0, v: 0, a: 0, hz: 0 }
+  { name: 'UPS 2.02', kva: null, v: null, a: null, hz: null },
+  { name: 'UPS 2.03', kva: null, v: null, a: null, hz: null },
+  { name: 'UPS 3.01', kva: null, v: null, a: null, hz: null },
+  { name: 'UPS 3.02', kva: null, v: null, a: null, hz: null },
+  { name: 'UPS 5.01', kva: null, v: null, a: null, hz: null },
+  { name: 'UPS 5.02', kva: null, v: null, a: null, hz: null }
 ]
 
 const defaultRectiList = () => [
-  { name: 'Panel 2.05', kva: 0, v: 0, a: 0, hz: 0 },
-  { name: 'Panel 2.36', kva: 0, v: 0, a: 0, hz: 0 },
-  { name: 'Panel 3.05', kva: 0, v: 0, a: 0, hz: 0 },
-  { name: 'Panel 3.10', kva: 0, v: 0, a: 0, hz: 0 },
-  { name: 'Panel 4.29', kva: 0, v: 0, a: 0, hz: 0 }
+  { name: 'Panel 2.05', kva: null, v: null, a: null, hz: null },
+  { name: 'Panel 2.36', kva: null, v: null, a: null, hz: null },
+  { name: 'Panel 3.05', kva: null, v: null, a: null, hz: null },
+  { name: 'Panel 3.10', kva: null, v: null, a: null, hz: null },
+  { name: 'Panel 4.29', kva: null, v: null, a: null, hz: null }
 ]
 
 const upsList = ref(defaultUpsList())
@@ -270,6 +290,13 @@ const chartUpsSeries = ref([])
 const chartRectiSeries = ref([])
 
 
+// --- FUNGSI UPDATE TEXT GRAFIK KOSONG ---
+const updateChartNoDataText = (text) => {
+  chartOptionsSingle.value = { ...chartOptionsSingle.value, noData: { ...chartOptionsSingle.value.noData, text } }
+  chartOptionsMulti.value = { ...chartOptionsMulti.value, noData: { ...chartOptionsMulti.value.noData, text } }
+  chartOptionsMultiLine.value = { ...chartOptionsMultiLine.value, noData: { ...chartOptionsMultiLine.value.noData, text } }
+}
+
 // --- FETCH API REALTIME ---
 const fetchRealtime = async () => {
   try {
@@ -279,6 +306,8 @@ const fetchRealtime = async () => {
       notifRef.value?.showSuccess('Koneksi Tersambung Kembali', 'Data kelistrikan berhasil dimuat ulang.')
     }
     
+    updateChartNoDataText('Tidak ada data') // Set default tulisan grafik ke Tidak ada data jika kosong
+
     pueValue.value = res.data.pue
     lvmdp.value = res.data.lvmdp
     itLoad.value = res.data.itLoad
@@ -320,19 +349,21 @@ const changeRange = (val) => {
   fetchTrends()
 }
 
-// --- LOGIKA ERROR (RESET 0) ---
+// --- LOGIKA ERROR (RESET ke NULL/OFFLINE) ---
 const handleApiError = () => {
   if (!apiError.value) {
     apiError.value = true
-    notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data. Mereset sistem ke nilai 0...')
+    notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data. Menampilkan status offline...')
   }
   
-  // Reset Semua Angka ke 0 beserta fallback panel
-  pueValue.value = 0
-  lvmdp.value = { kva: 0, voltage: 0, current: 0, freq: 0 }
-  itLoad.value = { kva: 0, voltage: 0, current: 0, freq: 0 }
-  totalUps.value = { kva: 0, voltage: 0, current: 0, freq: 0 }
-  totalRecti.value = { kva: 0, voltage: 0, current: 0, freq: 0 }
+  updateChartNoDataText('Offline')
+
+  // Reset Semua Angka ke null beserta fallback panel
+  pueValue.value = null
+  lvmdp.value = { kva: null, voltage: null, current: null, freq: null }
+  itLoad.value = { kva: null, voltage: null, current: null, freq: null }
+  totalUps.value = { kva: null, voltage: null, current: null, freq: null }
+  totalRecti.value = { kva: null, voltage: null, current: null, freq: null }
   upsList.value = defaultUpsList()
   rectiList.value = defaultRectiList()
 
@@ -351,7 +382,8 @@ const commonChartOptions = {
   grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
   dataLabels: { enabled: false },
   markers: { size: 0 }, 
-  tooltip: { x: { format: 'dd MMM yyyy, HH:mm' } }
+  tooltip: { x: { format: 'dd MMM yyyy, HH:mm' } },
+  noData: { text: 'Tidak ada data', align: 'center', verticalAlign: 'middle', style: { color: '#94a3b8', fontSize: '14px', fontFamily: 'inherit' } }
 }
 
 const chartOptionsSingle = ref({

@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 bg-slate-50 min-h-screen relative">
+  <div class="p-4 bg-slate-300 min-h-screen relative">
     
     <!-- NOTIFIKASI KONEKSI -->
     <ConnectionNotif ref="notifRef" />
@@ -29,9 +29,11 @@
           <div v-for="(tank, index) in tanksHarian" :key="index" class="flex flex-col items-center">
             <div class="text-center mb-3 w-full">
               <h3 class="text-base font-bold text-slate-800 mb-1">{{ tank.name }}</h3>
-              <div class="bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-200">
-                <p class="text-xl font-extrabold text-amber-600 leading-none mb-1 transition-all duration-500">
-                  {{ formatNumber(tank.animatedVolume) }} <span class="text-[10px] text-slate-500 font-semibold">L</span>
+              <div class="bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-200 min-h-[52px] flex flex-col justify-center">
+                <p class="font-extrabold leading-none transition-all duration-500"
+                   :class="apiError || tank.currentVolume === null ? 'text-[13px] text-slate-400 italic mb-1' : 'text-xl text-amber-600 mb-1'">
+                  {{ apiError ? 'Offline' : (tank.currentVolume !== null ? formatNumber(tank.animatedVolume) : 'No Data') }}
+                  <span v-if="!apiError && tank.currentVolume !== null" class="text-[10px] text-slate-500 font-semibold ml-0.5">L</span>
                 </p>
                 <p class="text-[9px] font-bold text-slate-400 uppercase border-t border-slate-200 pt-1 mt-1">
                   Kapasitas: {{ formatNumber(tank.capacity) }} L
@@ -45,7 +47,10 @@
                 <div class="wave-base wave-amber-front absolute left-0 w-[200%] h-16 -top-7"></div>
               </div>
               <div class="absolute inset-0 flex items-center justify-center mix-blend-difference pointer-events-none">
-                <span class="text-3xl font-extrabold text-white/90 transition-all duration-500">{{ Math.round(tank.animatedPercentage) }}%</span>
+                <span class="font-extrabold text-white/90 transition-all duration-500"
+                      :class="apiError || tank.currentVolume === null ? 'text-lg italic' : 'text-3xl'">
+                  {{ apiError ? 'Offline' : (tank.currentVolume !== null ? Math.round(tank.animatedPercentage) + '%' : 'No Data') }}
+                </span>
               </div>
             </div>
           </div>
@@ -63,9 +68,11 @@
           <div v-for="(tank, index) in tanksBulanan" :key="index" class="flex flex-col items-center">
             <div class="text-center mb-3 w-full">
               <h3 class="text-base font-bold text-slate-800 mb-1">{{ tank.name }}</h3>
-              <div class="bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-200">
-                <p class="text-xl font-extrabold text-emerald-600 leading-none mb-1 transition-all duration-500">
-                  {{ formatNumber(tank.animatedVolume) }} <span class="text-[10px] text-slate-500 font-semibold">L</span>
+              <div class="bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-200 min-h-[52px] flex flex-col justify-center">
+                <p class="font-extrabold leading-none transition-all duration-500"
+                   :class="apiError || tank.currentVolume === null ? 'text-[13px] text-slate-400 italic mb-1' : 'text-xl text-emerald-600 mb-1'">
+                  {{ apiError ? 'Offline' : (tank.currentVolume !== null ? formatNumber(tank.animatedVolume) : 'No Data') }}
+                  <span v-if="!apiError && tank.currentVolume !== null" class="text-[10px] text-slate-500 font-semibold ml-0.5">L</span>
                 </p>
                 <p class="text-[9px] font-bold text-slate-400 uppercase border-t border-slate-200 pt-1 mt-1">
                   Kapasitas: {{ formatNumber(tank.capacity) }} L
@@ -79,7 +86,10 @@
                 <div class="wave-base wave-emerald-front absolute left-0 w-[200%] h-16 -top-7"></div>
               </div>
               <div class="absolute inset-0 flex items-center justify-center mix-blend-difference pointer-events-none">
-                <span class="text-3xl font-extrabold text-white/90 transition-all duration-500">{{ Math.round(tank.animatedPercentage) }}%</span>
+                <span class="font-extrabold text-white/90 transition-all duration-500"
+                      :class="apiError || tank.currentVolume === null ? 'text-lg italic' : 'text-3xl'">
+                  {{ apiError ? 'Offline' : (tank.currentVolume !== null ? Math.round(tank.animatedPercentage) + '%' : 'No Data') }}
+                </span>
               </div>
             </div>
           </div>
@@ -139,7 +149,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
 import Card from '@/components/Card.vue'
-import ConnectionNotif from '@/components/ConnectionNotif.vue' // Tambahan komponen Notifikasi
+import ConnectionNotif from '@/components/ConnectionNotif.vue' 
 import { Download, Loader2, X } from '@lucide/vue'
 import api from '@/services/api'
 
@@ -149,7 +159,7 @@ const notifRef = ref(null)
 
 // --- SETUP WAKTU UPDATE & FETCH ---
 const lastUpdated = ref('')
-let timerClock = null // Cukup gunakan satu timer
+let timerClock = null 
 
 const updateTime = () => {
   const now = new Date()
@@ -159,34 +169,34 @@ const updateTime = () => {
 
 const formatNumber = (num) => Math.round(num).toLocaleString('id-ID')
 
-// --- DATA TANGKI (Default kosong) ---
+// --- DATA TANGKI (Diinisialisasi null) ---
 const tanksHarian = ref([
-  { name: 'Harian 1', capacity: 1500, currentVolume: 0, animatedVolume: 0, animatedPercentage: 0 },
-  { name: 'Harian 2', capacity: 1500, currentVolume: 0, animatedVolume: 0, animatedPercentage: 0 }
+  { name: 'Harian 1', capacity: 1500, currentVolume: null, animatedVolume: null, animatedPercentage: 0 },
+  { name: 'Harian 2', capacity: 1500, currentVolume: null, animatedVolume: null, animatedPercentage: 0 }
 ])
 const tanksBulanan = ref([
-  { name: 'Bulanan 1', capacity: 11662, currentVolume: 0, animatedVolume: 0, animatedPercentage: 0 },
-  { name: 'Bulanan 2', capacity: 10000, currentVolume: 0, animatedVolume: 0, animatedPercentage: 0 },
-  { name: 'Bulanan 3', capacity: 10000, currentVolume: 0, animatedVolume: 0, animatedPercentage: 0 }
+  { name: 'Bulanan 1', capacity: 11662, currentVolume: null, animatedVolume: null, animatedPercentage: 0 },
+  { name: 'Bulanan 2', capacity: 10000, currentVolume: null, animatedVolume: null, animatedPercentage: 0 },
+  { name: 'Bulanan 3', capacity: 10000, currentVolume: null, animatedVolume: null, animatedPercentage: 0 }
 ])
 
-// --- LOGIKA ERROR: Tampilkan notifikasi & reset ke 0 ---
+// --- LOGIKA ERROR: Tampilkan notifikasi & reset ke null/Offline ---
 const handleApiError = () => {
   if (!apiError.value) {
     apiError.value = true
-    notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data tangki. Mereset sistem ke nilai 0...')
+    notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data tangki. Menampilkan status offline...')
   }
 
-  // Animasi turun ke 0
+  // Animasi turun ke dasar (0%) dan set teks ke null (Offline)
   tanksHarian.value.forEach(tank => {
-    tank.currentVolume = 0
-    tank.animatedVolume = 0
+    tank.currentVolume = null
+    tank.animatedVolume = null
     tank.animatedPercentage = 0
   })
   
   tanksBulanan.value.forEach(tank => {
-    tank.currentVolume = 0
-    tank.animatedVolume = 0
+    tank.currentVolume = null
+    tank.animatedVolume = null
     tank.animatedPercentage = 0
   })
 }
@@ -196,7 +206,6 @@ const fetchRealtime = async () => {
   try {
     const res = await api.get('/tangki/latest')
     
-    // Logika Reconnect
     if (apiError.value) {
       apiError.value = false
       notifRef.value?.showSuccess('Koneksi Tersambung Kembali', 'Data tangki berhasil dimuat ulang.')
@@ -207,12 +216,12 @@ const fetchRealtime = async () => {
 
     tanksHarian.value.forEach(tank => {
       tank.animatedVolume = tank.currentVolume
-      tank.animatedPercentage = (tank.currentVolume / tank.capacity) * 100
+      tank.animatedPercentage = tank.currentVolume !== null ? (tank.currentVolume / tank.capacity) * 100 : 0
     })
     
     tanksBulanan.value.forEach(tank => {
       tank.animatedVolume = tank.currentVolume
-      tank.animatedPercentage = (tank.currentVolume / tank.capacity) * 100
+      tank.animatedPercentage = tank.currentVolume !== null ? (tank.currentVolume / tank.capacity) * 100 : 0
     })
   } catch (error) {
     handleApiError()
@@ -236,7 +245,7 @@ const handleDownload = async () => {
     document.body.appendChild(link); link.click(); link.remove()
     isDownloadModalOpen.value = false
   } catch (error) {
-    alert('Gagal menghubungi server untuk download.')
+    alert('Gagal menghubungi server untuk download. Pastikan backend aktif.')
   } finally {
     isDownloading.value = false
   }
@@ -247,7 +256,6 @@ onMounted(() => {
   updateTime()
   fetchRealtime()
   
-  // Update jam dan panggil API realtime setiap 1 detik (1000 ms)
   timerClock = setInterval(() => {
     updateTime()
     fetchRealtime()

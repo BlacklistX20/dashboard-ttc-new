@@ -1,5 +1,5 @@
 <template>
-  <div class="p-4 bg-slate-50 min-h-screen relative">
+  <div class="p-4 bg-slate-300 min-h-screen relative">
 
     <ConnectionNotif ref="notifRef" />
     
@@ -11,7 +11,7 @@
       </div>
 
       <div class="flex flex-wrap items-center gap-3">
-        <!-- TAB BUTTONS (Ditambah Lantai 1) -->
+        <!-- TAB BUTTONS -->
         <div class="flex space-x-1 bg-slate-200/60 p-1 rounded-xl">
           <button 
             v-for="tab in tabs" :key="tab.id"
@@ -38,7 +38,6 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-fade-in">
       
       <!-- Looping data ruangan berdasarkan tab yang aktif -->
-      <!-- Properti class dinamis memanipulasi border dan background kartu -->
       <Card 
         v-for="(room, index) in roomData[activeTab]" 
         :key="index" 
@@ -58,12 +57,12 @@
 
         <!-- BODY KARTU: Menampilkan Rata-Rata Suhu -->
         <div class="flex flex-col items-center justify-center py-4">
-          <!-- Warna angka suhu berubah sesuai status -->
-          <p class="text-5xl font-extrabold mb-1" :class="getTempStatus(room.avgTemp).textClass">
-            {{ room.avgTemp }}<span class="text-2xl font-bold opacity-60">°C</span>
+          <p class="font-extrabold mb-1" :class="[apiError || room.avgTemp === null ? 'text-2xl italic mt-3' : 'text-5xl', getTempStatus(room.avgTemp).textClass]">
+            {{ apiError ? 'Offline' : (room.avgTemp !== null ? room.avgTemp : 'No Data') }}
+            <span v-if="!apiError && room.avgTemp !== null" class="text-2xl font-bold opacity-60 ml-1">°C</span>
           </p>
           
-          <!-- Label Status (Dingin, Normal, Hangat, Panas) -->
+          <!-- Label Status (Dingin, Normal, Hangat, Panas, dll) -->
           <span 
             class="text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider mt-2 border"
             :class="[getTempStatus(room.avgTemp).badgeBg, getTempStatus(room.avgTemp).badgeText, getTempStatus(room.avgTemp).badgeBorder]"
@@ -76,7 +75,6 @@
         <template #footer>
           <div class="flex justify-between items-center w-full">
             <span class="text-[10px] text-slate-400 font-medium">{{ lastUpdated }}</span>
-            <!-- Tombol juga menyesuaikan warna agar temanya konsisten -->
             <button 
               @click="openModal(room)"
               class="text-white text-[10px] font-bold px-3 py-1.5 rounded-md transition-colors shadow-sm"
@@ -118,11 +116,11 @@
             >
               <div class="flex items-center gap-3">
                 <Thermometer class="w-5 h-5" :class="getTempStatus(sensor.temp).textClass" />
-                <!-- Penamaan diubah menjadi Sensor Suhu -->
                 <span class="font-medium text-slate-700 text-sm">{{ sensor.name }}</span>
               </div>
-              <div class="font-bold text-lg" :class="getTempStatus(sensor.temp).textClass">
-                {{ sensor.temp }}<span class="text-sm opacity-60">°C</span>
+              <div class="font-bold" :class="[apiError || sensor.temp === null ? 'text-sm italic' : 'text-lg', getTempStatus(sensor.temp).textClass]">
+                {{ apiError ? 'Offline' : (sensor.temp !== null ? sensor.temp : 'No Data') }}
+                <span v-if="!apiError && sensor.temp !== null" class="text-sm opacity-60 ml-1">°C</span>
               </div>
             </div>
           </div>
@@ -188,9 +186,16 @@ import ConnectionNotif from '@/components/ConnectionNotif.vue'
 import api from '@/services/api'
 import { X, Thermometer, Download, Loader2, WifiOff } from '@lucide/vue'
 
+const apiError = ref(false)
+const notifRef = ref(null)
+
 // --- LOGIKA STATUS WARNA (CORE LOGIC) ---
 const getTempStatus = (temp) => {
-  if (temp <= 18) {
+  if (apiError.value) {
+    return { label: 'OFFLINE', textClass: 'text-slate-400', borderClass: 'border-t-slate-400', cardBg: 'bg-slate-50/50 border-slate-200', badgeBg: 'bg-slate-200', badgeText: 'text-slate-600', badgeBorder: 'border-slate-300', btnClass: 'bg-slate-400 hover:bg-slate-500' }
+  } else if (temp === null) {
+    return { label: 'NO DATA', textClass: 'text-slate-400', borderClass: 'border-t-slate-300', cardBg: 'bg-slate-50/50 border-slate-200', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200', btnClass: 'bg-slate-400 hover:bg-slate-500' }
+  } else if (temp <= 18) {
     return { label: 'DINGIN', textClass: 'text-blue-600', borderClass: 'border-t-blue-500', cardBg: 'bg-blue-50/30 border-blue-100', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200', btnClass: 'bg-blue-600 hover:bg-blue-700' }
   } else if (temp > 18 && temp <= 24) {
     return { label: 'NORMAL', textClass: 'text-emerald-600', borderClass: 'border-t-emerald-500', cardBg: 'bg-emerald-50/30 border-emerald-100', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200', btnClass: 'bg-emerald-600 hover:bg-emerald-700' }
@@ -211,8 +216,6 @@ const tabs = ref([
   { id: 'lt5', label: 'Lantai 5' }
 ])
 
-const apiError = ref(false)
-const notifRef = ref(null)
 const isModalOpen = ref(false)
 const selectedRoom = ref(null)
 
@@ -234,7 +237,7 @@ const updateTime = () => {
   lastUpdated.value = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
 }
 
-// --- INISIALISASI STRUKTUR DATA BAWAAN (FALLBACK) ---
+// --- INISIALISASI STRUKTUR DATA BAWAAN (FALLBACK DENGAN NULL) ---
 const defaultRooms = {
   lt1: ['Ruang Trafo', 'Ruang Genset'],
   lt2: ['Ruang Baterai', 'Ruang Recti', 'Ruang MSC', 'Ruang CSPS'],
@@ -248,10 +251,10 @@ const getDefaultRoomData = () => {
   for (const [floor, rooms] of Object.entries(defaultRooms)) {
     data[floor] = rooms.map(name => ({
       name,
-      avgTemp: 0,
-      avgHum: 0,
-      isConnected: false, // Default terputus sebelum API berhasil di-load
-      sensors: [{ name: 'Sensor 1', temp: 0 }, { name: 'Sensor 2', temp: 0 }]
+      avgTemp: null,
+      avgHum: null,
+      isConnected: false, 
+      sensors: [{ name: 'Sensor 1', temp: null }, { name: 'Sensor 2', temp: null }]
     }))
   }
   return data
@@ -278,17 +281,16 @@ const fetchRealtime = async () => {
 const handleApiError = () => {
   if (!apiError.value) {
     apiError.value = true
-    notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data suhu. Mereset sistem ke nilai 0...')
+    notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data. Menampilkan status offline...')
   }
 
-  // Karena roomData sekarang selalu memiliki struktur ruangan, mapping ini akan berjalan dengan baik
   Object.keys(roomData.value).forEach(floor => {
     roomData.value[floor] = roomData.value[floor].map(room => ({
       ...room,
-      avgTemp: 0,
-      avgHum: 0,
+      avgTemp: null,
+      avgHum: null,
       isConnected: false,
-      sensors: room.sensors.map(s => ({ ...s, temp: 0 }))
+      sensors: room.sensors.map(s => ({ ...s, temp: null }))
     }))
   })
 }
@@ -334,7 +336,7 @@ onMounted(() => {
   timer = setInterval(() => {
     updateTime()
     fetchRealtime()
-  }, 1000)
+  }, 1000) // Catatan: Polling 1 detik mungkin memberatkan server jika banyak user
 })
 onUnmounted(() => { if (timer) clearInterval(timer) })
 </script>

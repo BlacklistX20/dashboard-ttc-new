@@ -36,73 +36,116 @@
     <!-- KONTEN RUANGAN AKTIF -->
     <div class="flex flex-col gap-4 animate-fade-in">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Kartu Suhu -->
+        
+        <!-- ================= KARTU SUHU ================= -->
         <Card title="Suhu Ruangan" bodyClass="p-4">
-          <div class="flex flex-col items-center justify-center py-2">
-            <p class="text-4xl font-extrabold mb-1" :class="tempStatus.textClass">
-              {{ currentRoom.temp.current }}<span class="text-xl font-bold opacity-60">°C</span>
+          <div class="flex flex-col items-center justify-center py-2 min-h-[120px]">
+            <p class="font-extrabold mb-1" :class="[apiError || currentRoom.temp.current === null ? 'text-2xl italic' : 'text-4xl', tempStatus.textClass]">
+              {{ apiError ? 'Offline' : (currentRoom.temp.current !== null ? currentRoom.temp.current : 'No Data') }}
+              <span v-if="!apiError && currentRoom.temp.current !== null" class="text-xl font-bold opacity-60 ml-1">°C</span>
             </p>
             <span class="text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider mt-2 border" :class="[tempStatus.badgeBg, tempStatus.badgeText, tempStatus.badgeBorder]">
               {{ tempStatus.label }}
             </span>
           </div>
           <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-100 text-center">
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 1</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.temp.sensors[0].value }}°C</p></div>
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 2</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.temp.sensors[1].value }}°C</p></div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 1</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.temp.sensors[0].value === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.temp.sensors[0].value === null ? '-' : currentRoom.temp.sensors[0].value + ' °C' }}</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 2</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.temp.sensors[1].value === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.temp.sensors[1].value === null ? '-' : currentRoom.temp.sensors[1].value + ' °C' }}</p>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100 text-center">
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Min Hari Ini</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.temp.min }}°C</p></div>
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Max Hari Ini</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.temp.max }}°C</p></div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Min Hari Ini</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.temp.min === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.temp.min === null ? '-' : currentRoom.temp.min + ' °C' }}</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Max Hari Ini</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.temp.max === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.temp.max === null ? '-' : currentRoom.temp.max + ' °C' }}</p>
+            </div>
           </div>
         </Card>
 
-        <!-- Kartu Humidity -->
+        <!-- ================= KARTU HUMIDITY ================= -->
         <Card title="Humidity Ruangan" bodyClass="p-4">
-          <div class="flex flex-col items-center justify-center py-2">
-            <p class="text-4xl font-extrabold mb-1" :class="humStatus.textClass">
-              {{ currentRoom.humidity.current }}<span class="text-xl font-bold opacity-60">%</span>
+          <div class="flex flex-col items-center justify-center py-2 min-h-[120px]">
+            <p class="font-extrabold mb-1" :class="[apiError || currentRoom.humidity.current === null ? 'text-2xl italic' : 'text-4xl', humStatus.textClass]">
+              {{ apiError ? 'Offline' : (currentRoom.humidity.current !== null ? currentRoom.humidity.current : 'No Data') }}
+              <span v-if="!apiError && currentRoom.humidity.current !== null" class="text-xl font-bold opacity-60 ml-1">%</span>
             </p>
             <span class="text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider mt-2 border" :class="[humStatus.badgeBg, humStatus.badgeText, humStatus.badgeBorder]">
               {{ humStatus.label }}
             </span>
           </div>
           <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-100 text-center">
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 1</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.humidity.sensors[0].value }}%</p></div>
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 2</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.humidity.sensors[1].value }}%</p></div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 1</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.humidity.sensors[0].value === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.humidity.sensors[0].value === null ? '-' : currentRoom.humidity.sensors[0].value + ' %' }}</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 2</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.humidity.sensors[1].value === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.humidity.sensors[1].value === null ? '-' : currentRoom.humidity.sensors[1].value + ' %' }}</p>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100 text-center">
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Min Hari Ini</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.humidity.min }}%</p></div>
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Max Hari Ini</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.humidity.max }}%</p></div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Min Hari Ini</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.humidity.min === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.humidity.min === null ? '-' : currentRoom.humidity.min + ' %' }}</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Max Hari Ini</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.humidity.max === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.humidity.max === null ? '-' : currentRoom.humidity.max + ' %' }}</p>
+            </div>
           </div>
         </Card>
 
-        <!-- Kartu Gas (Dinamis: CO2 atau Hidrogen) -->
+        <!-- ================= KARTU GAS ================= -->
         <Card :title="`${gasLabel} Ruangan`" bodyClass="p-4">
-          <div class="flex flex-col items-center justify-center py-2">
-            <p class="text-4xl font-extrabold mb-1" :class="gasStatus.textClass">
-              {{ currentRoom.gas.current }}<span class="text-base font-bold opacity-60"> ppm</span>
+          <div class="flex flex-col items-center justify-center py-2 min-h-[120px]">
+            <p class="font-extrabold mb-1" :class="[apiError || currentRoom.gas.current === null ? 'text-2xl italic' : 'text-4xl', gasStatus.textClass]">
+              {{ apiError ? 'Offline' : (currentRoom.gas.current !== null ? currentRoom.gas.current : 'No Data') }}
+              <span v-if="!apiError && currentRoom.gas.current !== null" class="text-base font-bold opacity-60 ml-1">ppm</span>
             </p>
             <span class="text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider mt-2 border" :class="[gasStatus.badgeBg, gasStatus.badgeText, gasStatus.badgeBorder]">
               {{ gasStatus.label }}
             </span>
           </div>
           <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-100 text-center">
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 1</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.gas.sensors[0].value }} ppm</p></div>
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 2</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.gas.sensors[1].value }} ppm</p></div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 1</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.gas.sensors[0].value === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.gas.sensors[0].value === null ? '-' : currentRoom.gas.sensors[0].value + ' ppm' }}</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Sensor 2</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.gas.sensors[1].value === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.gas.sensors[1].value === null ? '-' : currentRoom.gas.sensors[1].value + ' ppm' }}</p>
+            </div>
           </div>
           <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100 text-center">
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Min Hari Ini</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.gas.min }} ppm</p></div>
-            <div><p class="text-[9px] text-slate-400 font-bold uppercase">Max Hari Ini</p><p class="text-sm font-bold text-slate-700">{{ currentRoom.gas.max }} ppm</p></div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Min Hari Ini</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.gas.min === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.gas.min === null ? '-' : currentRoom.gas.min + ' ppm' }}</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-400 font-bold uppercase">Max Hari Ini</p>
+              <p class="text-sm font-bold" :class="apiError || currentRoom.gas.max === null ? 'text-slate-400' : 'text-slate-700'">{{ apiError || currentRoom.gas.max === null ? '-' : currentRoom.gas.max + ' ppm' }}</p>
+            </div>
           </div>
         </Card>
       </div>
 
+      <!-- ================= SECTION BAWAH (ALERT & GRAFIK) ================= -->
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        
         <!-- Kartu Alert -->
-        <Card title="Riwayat Alert" bodyClass="p-0">
-          <div class="overflow-x-auto max-h-96 overflow-y-auto">
+        <!-- Penambahan flex-col dan justify-start agar tabel dipaksa naik ke atas -->
+        <Card title="Riwayat Alert" bodyClass="p-0 flex flex-col justify-start h-full">
+          <div class="overflow-x-auto h-full max-h-[420px] overflow-y-auto w-full">
             <table class="w-full text-xs">
-              <thead class="bg-slate-50 sticky top-0">
+              <thead class="bg-slate-50 sticky top-0 shadow-sm">
                 <tr class="text-left text-slate-500">
                   <th class="px-4 py-2 font-bold">Waktu</th>
                   <th class="px-4 py-2 font-bold">Alert</th>
@@ -110,7 +153,11 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="alerts.length === 0"><td colspan="3" class="px-4 py-6 text-center text-slate-400">Tidak ada alert</td></tr>
+                <tr v-if="alerts.length === 0 || apiError">
+                  <td colspan="3" class="px-4 py-6 text-center text-slate-400 italic">
+                    {{ apiError ? 'Offline: Gagal memuat data alert' : 'Tidak ada alert terbaru' }}
+                  </td>
+                </tr>
                 <tr v-for="(item, idx) in alerts" :key="idx" class="border-t border-slate-100">
                   <td class="px-4 py-2 text-slate-500 whitespace-nowrap">{{ formatAlertTime(item.time) }}</td>
                   <td class="px-4 py-2 text-slate-700 font-semibold">{{ item.alert }}</td>
@@ -126,7 +173,7 @@
         </Card>
 
         <!-- Kartu Grafik -->
-        <Card title="Tren Historis" bodyClass="p-3 flex flex-col gap-3">
+        <Card title="Tren Historis" bodyClass="p-3 flex flex-col gap-3 h-full">
           <div><p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Suhu (°C)</p><apexchart type="area" height="110" :options="chartOptionsTemp" :series="chartTempSeries"></apexchart></div>
           <div><p class="text-[10px] font-bold text-slate-500 uppercase mb-1">Humidity (%)</p><apexchart type="area" height="110" :options="chartOptionsHumidity" :series="chartHumiditySeries"></apexchart></div>
           <div><p class="text-[10px] font-bold text-slate-500 uppercase mb-1">{{ gasLabel }} (ppm)</p><apexchart type="area" height="110" :options="chartOptionsGas" :series="chartGasSeries"></apexchart></div>
@@ -206,30 +253,39 @@ const THRESHOLDS = {
   hydrogen: { rendah: 50, tinggi: 200 } // Sesuaikan batas aman Hidrogen Anda
 }
 
+// --- LOGIKA STATUS WARNA (CORE LOGIC) ---
 const getTempStatus = (v) => {
+  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-400', badgeBg: 'bg-slate-200', badgeText: 'text-slate-500', badgeBorder: 'border-slate-300' }
+  if (v === null || v === undefined) return { label: 'NO DATA', textClass: 'text-slate-400', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200' }
   if (v < THRESHOLDS.temp.dingin) return { label: 'DINGIN', textClass: 'text-blue-600', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200' }
   if (v > THRESHOLDS.temp.panas) return { label: 'PANAS', textClass: 'text-red-600', badgeBg: 'bg-red-100', badgeText: 'text-red-700', badgeBorder: 'border-red-200' }
   return { label: 'NORMAL', textClass: 'text-emerald-600', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200' }
 }
 
 const getHumidityStatus = (v) => {
+  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-400', badgeBg: 'bg-slate-200', badgeText: 'text-slate-500', badgeBorder: 'border-slate-300' }
+  if (v === null || v === undefined) return { label: 'NO DATA', textClass: 'text-slate-400', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200' }
   if (v < THRESHOLDS.humidity.kering) return { label: 'KERING', textClass: 'text-amber-500', badgeBg: 'bg-amber-100', badgeText: 'text-amber-700', badgeBorder: 'border-amber-200' }
   if (v > THRESHOLDS.humidity.lembab) return { label: 'LEMBAB', textClass: 'text-blue-600', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200' }
   return { label: 'NORMAL', textClass: 'text-emerald-600', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200' }
 }
 
 const getGasStatus = (v, type) => {
+  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-400', badgeBg: 'bg-slate-200', badgeText: 'text-slate-500', badgeBorder: 'border-slate-300' }
+  if (v === null || v === undefined) return { label: 'NO DATA', textClass: 'text-slate-400', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200' }
+  
   const limits = type === 'CO2' ? THRESHOLDS.co2 : THRESHOLDS.hydrogen
   if (v < limits.rendah) return { label: 'RENDAH', textClass: 'text-sky-600', badgeBg: 'bg-sky-100', badgeText: 'text-sky-700', badgeBorder: 'border-sky-200' }
   if (v > limits.tinggi) return { label: 'TINGGI / BAHAYA', textClass: 'text-red-600', badgeBg: 'bg-red-100', badgeText: 'text-red-700', badgeBorder: 'border-red-200' }
   return { label: 'NORMAL', textClass: 'text-emerald-600', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200' }
 }
 
-const emptySensors = () => [{ name: 'Sensor 1', value: 0 }, { name: 'Sensor 2', value: 0 }]
+// --- INISIALISASI STRUKTUR DATA BAWAAN (FALLBACK DENGAN NULL) ---
+const emptySensors = () => [{ name: 'Sensor 1', value: null }, { name: 'Sensor 2', value: null }]
 const emptyRoom = () => ({
-  temp: { current: 0, sensors: emptySensors(), min: 0, max: 0 },
-  humidity: { current: 0, sensors: emptySensors(), min: 0, max: 0 },
-  gas: { current: 0, sensors: emptySensors(), min: 0, max: 0 }
+  temp: { current: null, sensors: emptySensors(), min: null, max: null },
+  humidity: { current: null, sensors: emptySensors(), min: null, max: null },
+  gas: { current: null, sensors: emptySensors(), min: null, max: null }
 })
 
 const roomData = ref({
@@ -242,6 +298,7 @@ const tempStatus = computed(() => getTempStatus(currentRoom.value.temp.current))
 const humStatus = computed(() => getHumidityStatus(currentRoom.value.humidity.current))
 const gasStatus = computed(() => getGasStatus(currentRoom.value.gas.current, gasLabel.value))
 
+// --- FETCH DATA API ---
 const fetchRealtime = async () => {
   try {
     const res = await api.get('/gas')
@@ -253,7 +310,7 @@ const fetchRealtime = async () => {
   } catch (err) {
     if (!apiError.value) {
       apiError.value = true
-      notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data gas. Mereset sistem ke nilai 0...')
+      notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data gas. Menampilkan status offline...')
     }
     Object.keys(roomData.value).forEach(key => roomData.value[key] = emptyRoom())
   }
@@ -275,6 +332,47 @@ const formatAlertTime = (t) => {
   return `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
+// --- FUNGSI UPDATE TEXT GRAFIK KOSONG ---
+const updateChartNoDataText = (text) => {
+  chartOptionsTemp.value = { ...chartOptionsTemp.value, noData: { ...chartOptionsTemp.value.noData, text } }
+  chartOptionsHumidity.value = { ...chartOptionsHumidity.value, noData: { ...chartOptionsHumidity.value.noData, text } }
+  chartOptionsGas.value = { ...chartOptionsGas.value, noData: { ...chartOptionsGas.value.noData, text } }
+}
+
+const chartTempSeries = ref([])
+const chartHumiditySeries = ref([])
+const chartGasSeries = ref([])
+
+const commonChartOptions = { 
+  fontFamily: 'inherit', 
+  xaxis: { type: 'datetime', axisBorder: { show: false }, tooltip: { enabled: false }, labels: { style: { fontSize: '9px' } } }, 
+  grid: { borderColor: '#f1f5f9', strokeDashArray: 4 }, 
+  dataLabels: { enabled: false }, 
+  markers: { size: 0 }, 
+  tooltip: { x: { format: 'dd MMM yyyy, HH:mm' } },
+  noData: { text: 'Tidak ada data', align: 'center', verticalAlign: 'middle', style: { color: '#94a3b8', fontSize: '12px', fontFamily: 'inherit' } }
+}
+
+const chartOptionsTemp = ref({ ...commonChartOptions, chart: { type: 'area', toolbar: { show: false }, animations: { enabled: false } }, colors: ['#f59e0b'], fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0, stops: [0, 90, 100] } }, stroke: { curve: 'smooth', width: 2 } })
+const chartOptionsHumidity = ref({ ...commonChartOptions, chart: { type: 'area', toolbar: { show: false }, animations: { enabled: false } }, colors: ['#0284c7'], fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0, stops: [0, 90, 100] } }, stroke: { curve: 'smooth', width: 2 } })
+const chartOptionsGas = ref({ ...commonChartOptions, chart: { type: 'area', toolbar: { show: false }, animations: { enabled: false } }, colors: ['#16a34a'], fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0, stops: [0, 90, 100] } }, stroke: { curve: 'smooth', width: 2 } })
+
+const fetchTrend = async () => {
+  try {
+    updateChartNoDataText('Tidak ada data')
+    const res = await api.get('/gas/trend', { params: { room: activeTab.value, range: TREND_RANGE } })
+    chartTempSeries.value = [{ name: 'Suhu', data: res.data.temp }]
+    chartHumiditySeries.value = [{ name: 'Humidity', data: res.data.humidity }]
+    chartGasSeries.value = [{ name: gasLabel.value, data: res.data.gas }]
+  } catch (err) {
+    updateChartNoDataText('Offline')
+    chartTempSeries.value = []; chartHumiditySeries.value = []; chartGasSeries.value = []
+  }
+}
+
+watch(activeTab, () => { fetchAlerts(); fetchTrend() })
+
+// --- MODAL DOWNLOAD ---
 const isDownloadModalOpen = ref(false)
 const isDownloading = ref(false)
 const downloadForm = ref({ room: 'vendor', format: 'excel', startDate: '', endDate: '' })
@@ -296,28 +394,6 @@ const handleDownload = async () => {
     isDownloading.value = false
   }
 }
-
-const chartTempSeries = ref([])
-const chartHumiditySeries = ref([])
-const chartGasSeries = ref([])
-
-const commonChartOptions = { fontFamily: 'inherit', xaxis: { type: 'datetime', axisBorder: { show: false }, tooltip: { enabled: false }, labels: { style: { fontSize: '9px' } } }, grid: { borderColor: '#f1f5f9', strokeDashArray: 4 }, dataLabels: { enabled: false }, markers: { size: 0 }, tooltip: { x: { format: 'dd MMM yyyy, HH:mm' } } }
-const chartOptionsTemp = ref({ ...commonChartOptions, chart: { type: 'area', toolbar: { show: false }, animations: { enabled: false } }, colors: ['#f59e0b'], fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0, stops: [0, 90, 100] } }, stroke: { curve: 'smooth', width: 2 } })
-const chartOptionsHumidity = ref({ ...commonChartOptions, chart: { type: 'area', toolbar: { show: false }, animations: { enabled: false } }, colors: ['#0284c7'], fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0, stops: [0, 90, 100] } }, stroke: { curve: 'smooth', width: 2 } })
-const chartOptionsGas = ref({ ...commonChartOptions, chart: { type: 'area', toolbar: { show: false }, animations: { enabled: false } }, colors: ['#16a34a'], fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.3, opacityTo: 0, stops: [0, 90, 100] } }, stroke: { curve: 'smooth', width: 2 } })
-
-const fetchTrend = async () => {
-  try {
-    const res = await api.get('/gas/trend', { params: { room: activeTab.value, range: TREND_RANGE } })
-    chartTempSeries.value = [{ name: 'Suhu', data: res.data.temp }]
-    chartHumiditySeries.value = [{ name: 'Humidity', data: res.data.humidity }]
-    chartGasSeries.value = [{ name: gasLabel.value, data: res.data.gas }]
-  } catch (err) {
-    chartTempSeries.value = []; chartHumiditySeries.value = []; chartGasSeries.value = []
-  }
-}
-
-watch(activeTab, () => { fetchAlerts(); fetchTrend() })
 
 let timer = null
 onMounted(() => {
