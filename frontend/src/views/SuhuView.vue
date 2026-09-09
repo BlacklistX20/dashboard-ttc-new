@@ -189,50 +189,20 @@ import api from '@/services/api'
 import { X, Thermometer, Download, Loader2, WifiOff } from '@lucide/vue'
 
 // --- LOGIKA STATUS WARNA (CORE LOGIC) ---
-// <= 18 (Biru), > 18 s/d 24 (Hijau), > 24 s/d 29 (Kuning), > 29 (Merah)
 const getTempStatus = (temp) => {
   if (temp <= 18) {
-    return {
-      label: 'DINGIN',
-      textClass: 'text-blue-600',
-      borderClass: 'border-t-blue-500',
-      cardBg: 'bg-blue-50/30 border-blue-100',
-      badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200',
-      btnClass: 'bg-blue-600 hover:bg-blue-700'
-    }
+    return { label: 'DINGIN', textClass: 'text-blue-600', borderClass: 'border-t-blue-500', cardBg: 'bg-blue-50/30 border-blue-100', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200', btnClass: 'bg-blue-600 hover:bg-blue-700' }
   } else if (temp > 18 && temp <= 24) {
-    return {
-      label: 'NORMAL',
-      textClass: 'text-emerald-600',
-      borderClass: 'border-t-emerald-500',
-      cardBg: 'bg-emerald-50/30 border-emerald-100',
-      badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200',
-      btnClass: 'bg-emerald-600 hover:bg-emerald-700'
-    }
+    return { label: 'NORMAL', textClass: 'text-emerald-600', borderClass: 'border-t-emerald-500', cardBg: 'bg-emerald-50/30 border-emerald-100', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200', btnClass: 'bg-emerald-600 hover:bg-emerald-700' }
   } else if (temp > 24 && temp <= 29) {
-    return {
-      label: 'HANGAT',
-      textClass: 'text-amber-500',
-      borderClass: 'border-t-amber-400',
-      cardBg: 'bg-amber-50/30 border-amber-100',
-      badgeBg: 'bg-amber-100', badgeText: 'text-amber-700', badgeBorder: 'border-amber-200',
-      btnClass: 'bg-amber-500 hover:bg-amber-600'
-    }
+    return { label: 'HANGAT', textClass: 'text-amber-500', borderClass: 'border-t-amber-400', cardBg: 'bg-amber-50/30 border-amber-100', badgeBg: 'bg-amber-100', badgeText: 'text-amber-700', badgeBorder: 'border-amber-200', btnClass: 'bg-amber-500 hover:bg-amber-600' }
   } else {
-    // Lebih dari 29
-    return {
-      label: 'PANAS / BAHAYA',
-      textClass: 'text-red-600',
-      borderClass: 'border-t-red-500',
-      cardBg: 'bg-red-50/30 border-red-100',
-      badgeBg: 'bg-red-100', badgeText: 'text-red-700', badgeBorder: 'border-red-200',
-      btnClass: 'bg-red-600 hover:bg-red-700'
-    }
+    return { label: 'PANAS / BAHAYA', textClass: 'text-red-600', borderClass: 'border-t-red-500', cardBg: 'bg-red-50/30 border-red-100', badgeBg: 'bg-red-100', badgeText: 'text-red-700', badgeBorder: 'border-red-200', btnClass: 'bg-red-600 hover:bg-red-700' }
   }
 }
 
 // --- KONTROL TAB ---
-const activeTab = ref('lt1') // Default dibuka di Lantai 1
+const activeTab = ref('lt1')
 const tabs = ref([
   { id: 'lt1', label: 'Lantai 1' },
   { id: 'lt2', label: 'Lantai 2' },
@@ -241,11 +211,8 @@ const tabs = ref([
   { id: 'lt5', label: 'Lantai 5' }
 ])
 
-// --- NOTIFIKASI ERROR/RECONNECT KONEKSI (via komponen ConnectionNotif) ---
 const apiError = ref(false)
 const notifRef = ref(null)
-
-// --- KONTROL MODAL ---
 const isModalOpen = ref(false)
 const selectedRoom = ref(null)
 
@@ -267,10 +234,33 @@ const updateTime = () => {
   lastUpdated.value = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
 }
 
+// --- INISIALISASI STRUKTUR DATA BAWAAN (FALLBACK) ---
+const defaultRooms = {
+  lt1: ['Ruang Trafo', 'Ruang Genset'],
+  lt2: ['Ruang Baterai', 'Ruang Recti', 'Ruang MSC', 'Ruang CSPS'],
+  lt3: ['Ruang Baterai', 'Ruang Recti', 'Ruang INVAS', 'Ruang Core', 'Ruang MKios', 'Ruang OCS'],
+  lt4: ['Ruang Baterai', 'Ruang Recti', 'Ruang BSS', 'Ruang Interkoneksi', 'Ruang Transmisi'],
+  lt5: ['Ruang Utility A', 'Ruang Utility B', 'Ruang Data Center', 'Ruang Pengembangan', 'Ruang Containment']
+}
 
-// --- DATA RUANGAN PER LANTAI (Diisi dari API, dikelompokkan per tab lantai) ---
-const roomData = ref({ lt1: [], lt2: [], lt3: [], lt4: [], lt5: [] })
+const getDefaultRoomData = () => {
+  const data = {}
+  for (const [floor, rooms] of Object.entries(defaultRooms)) {
+    data[floor] = rooms.map(name => ({
+      name,
+      avgTemp: 0,
+      avgHum: 0,
+      isConnected: false, // Default terputus sebelum API berhasil di-load
+      sensors: [{ name: 'Sensor 1', temp: 0 }, { name: 'Sensor 2', temp: 0 }]
+    }))
+  }
+  return data
+}
 
+// Mengisi data bawaan agar kartu tetap ter-render saat awal halaman dimuat
+const roomData = ref(getDefaultRoomData())
+
+// --- FETCH DATA API ---
 const fetchRealtime = async () => {
   try {
     const res = await api.get('/suhu')
@@ -284,13 +274,14 @@ const fetchRealtime = async () => {
   }
 }
 
-// --- LOGIKA ERROR: tampilkan notifikasi & reset semua kartu ke 0 ---
+// --- LOGIKA ERROR ---
 const handleApiError = () => {
   if (!apiError.value) {
     apiError.value = true
     notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data suhu. Mereset sistem ke nilai 0...')
   }
 
+  // Karena roomData sekarang selalu memiliki struktur ruangan, mapping ini akan berjalan dengan baik
   Object.keys(roomData.value).forEach(floor => {
     roomData.value[floor] = roomData.value[floor].map(room => ({
       ...room,
@@ -309,40 +300,13 @@ const formatOptions = [
   { value: 'excel', label: 'Excel (.xlsx)' },
   { value: 'pdf', label: 'PDF (.pdf)' }
 ]
-// Daftar ruangan untuk dropdown download, dikelompokkan per lantai (key harus sama dengan mapping di backend)
+
 const roomOptions = [
-  { floor: 'Lantai 1', rooms: [
-    { key: 'trafo', label: 'Ruang Trafo' },
-    { key: 'genset', label: 'Ruang Genset' }
-  ]},
-  { floor: 'Lantai 2', rooms: [
-    { key: 'battery2', label: 'Ruang Baterai' },
-    { key: 'recti2', label: 'Ruang Recti' },
-    { key: 'msc2', label: 'Ruang MSC' },
-    { key: 'csps2', label: 'Ruang CSPS' }
-  ]},
-  { floor: 'Lantai 3', rooms: [
-    { key: 'battery3', label: 'Ruang Baterai' },
-    { key: 'recti3', label: 'Ruang Recti' },
-    { key: 'invas3', label: 'Ruang INVAS' },
-    { key: 'core3', label: 'Ruang Core' },
-    { key: 'mkios3', label: 'Ruang MKios' },
-    { key: 'ocs3', label: 'Ruang OCS' }
-  ]},
-  { floor: 'Lantai 4', rooms: [
-    { key: 'battery4', label: 'Ruang Baterai' },
-    { key: 'recti4', label: 'Ruang Recti' },
-    { key: 'bss4', label: 'Ruang BSS' },
-    { key: 'interkoneksi4', label: 'Ruang Interkoneksi' },
-    { key: 'transmisi4', label: 'Ruang Transmisi' }
-  ]},
-  { floor: 'Lantai 5', rooms: [
-    { key: 'utilityA5', label: 'Ruang Utility A' },
-    { key: 'utilityB5', label: 'Ruang Utility B' },
-    { key: 'dataCenter5', label: 'Ruang Data Center' },
-    { key: 'pengembangan5', label: 'Ruang Pengembangan' },
-    { key: 'containment5', label: 'Ruang Containment' }
-  ]}
+  { floor: 'Lantai 1', rooms: [ { key: 'trafo', label: 'Ruang Trafo' }, { key: 'genset', label: 'Ruang Genset' } ]},
+  { floor: 'Lantai 2', rooms: [ { key: 'battery2', label: 'Ruang Baterai' }, { key: 'recti2', label: 'Ruang Recti' }, { key: 'msc2', label: 'Ruang MSC' }, { key: 'csps2', label: 'Ruang CSPS' } ]},
+  { floor: 'Lantai 3', rooms: [ { key: 'battery3', label: 'Ruang Baterai' }, { key: 'recti3', label: 'Ruang Recti' }, { key: 'invas3', label: 'Ruang INVAS' }, { key: 'core3', label: 'Ruang Core' }, { key: 'mkios3', label: 'Ruang MKios' }, { key: 'ocs3', label: 'Ruang OCS' } ]},
+  { floor: 'Lantai 4', rooms: [ { key: 'battery4', label: 'Ruang Baterai' }, { key: 'recti4', label: 'Ruang Recti' }, { key: 'bss4', label: 'Ruang BSS' }, { key: 'interkoneksi4', label: 'Ruang Interkoneksi' }, { key: 'transmisi4', label: 'Ruang Transmisi' } ]},
+  { floor: 'Lantai 5', rooms: [ { key: 'utilityA5', label: 'Ruang Utility A' }, { key: 'utilityB5', label: 'Ruang Utility B' }, { key: 'dataCenter5', label: 'Ruang Data Center' }, { key: 'pengembangan5', label: 'Ruang Pengembangan' }, { key: 'containment5', label: 'Ruang Containment' } ]}
 ]
 const downloadForm = ref({ room: 'trafo', format: 'excel', startDate: '', endDate: '' })
 
@@ -370,10 +334,9 @@ onMounted(() => {
   timer = setInterval(() => {
     updateTime()
     fetchRealtime()
-  }, 5000) // Refresh data suhu setiap 5 detik
+  }, 1000)
 })
 onUnmounted(() => { if (timer) clearInterval(timer) })
-
 </script>
 
 <style scoped>

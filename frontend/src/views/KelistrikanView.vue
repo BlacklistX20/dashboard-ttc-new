@@ -96,28 +96,30 @@
 
     <!-- ================= TAB 2: SISTEM UPS ================= -->
     <div v-if="activeTab === 'ups'" class="flex flex-col gap-4 animate-fade-in">
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <Card title="Total UPS Load" class="lg:col-span-1 border-l-4 border-l-sky-500">
-          <div class="text-center py-2 border-b border-slate-100 mb-4 pb-4">
-            <span class="text-4xl font-bold text-sky-600">{{ totalUps.kva }}</span><span class="text-xs text-slate-500 ml-1 font-bold">kVA</span>
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4 items-stretch">
+        
+        <!-- Total UPS Load: 1 Kolom, Tinggi mengikuti kontainer sebelah otomatis -->
+        <Card title="Total UPS Load" class="lg:col-span-1 border-l-4 border-l-sky-500" bodyClass="flex flex-col justify-center h-full p-4">
+          <div class="text-center py-4 border-b border-slate-100 mb-6 pb-6">
+            <span class="text-5xl font-bold text-sky-600">{{ totalUps.kva }}</span><span class="text-sm text-slate-500 ml-1 font-bold">kVA</span>
           </div>
           <div class="grid grid-cols-3 text-center gap-1">
-            <div><p class="text-[10px] text-slate-400 font-bold">V</p><p class="text-sm font-bold text-slate-700">{{ totalUps.voltage }}</p></div>
-            <div class="border-l border-r border-slate-100"><p class="text-[10px] text-slate-400 font-bold">A</p><p class="text-sm font-bold text-slate-700">{{ totalUps.current }}</p></div>
-            <div><p class="text-[10px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold text-slate-700">{{ totalUps.freq }}</p></div>
+            <div><p class="text-xs text-slate-400 font-bold">V</p><p class="text-xl font-bold text-slate-700">{{ totalUps.voltage }}</p></div>
+            <div class="border-l border-r border-slate-100"><p class="text-xs text-slate-400 font-bold">A</p><p class="text-xl font-bold text-slate-700">{{ totalUps.current }}</p></div>
+            <div><p class="text-xs text-slate-400 font-bold">Hz</p><p class="text-xl font-bold text-slate-700">{{ totalUps.freq }}</p></div>
           </div>
-          <template #footer><div class="flex justify-between items-center text-[10px] text-slate-400"><span>Update:</span><span class="font-medium text-slate-500">{{ lastUpdated }}</span></div></template>
         </Card>
 
-        <div class="lg:col-span-3 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
-          <Card v-for="ups in upsList" :key="ups.name" :title="ups.name" bodyClass="p-2">
-            <div class="text-center mb-2">
-              <span class="text-xl font-bold text-slate-700">{{ ups.kva }}</span><span class="text-[9px] text-slate-500 ml-1">kVA</span>
+        <!-- Kartu UPS Individual: 3 Kolom = Otomatis 2 Baris (3 di atas, 3 di bawah) -->
+        <div class="lg:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-4">
+          <Card v-for="ups in upsList" :key="ups.name" :title="ups.name" bodyClass="p-4 flex flex-col justify-center">
+            <div class="text-center mb-4">
+              <span class="text-2xl font-bold text-slate-700">{{ ups.kva }}</span><span class="text-xs text-slate-500 ml-1">kVA</span>
             </div>
-            <div class="flex justify-between border-t border-slate-50 pt-2 text-center">
-              <div class="w-1/3"><p class="text-[8px] text-slate-400 font-bold">V</p><p class="text-[11px] font-bold text-slate-600">{{ ups.v }}</p></div>
-              <div class="w-1/3 border-l border-r border-slate-100"><p class="text-[8px] text-slate-400 font-bold">A</p><p class="text-[11px] font-bold text-slate-600">{{ ups.a }}</p></div>
-              <div class="w-1/3"><p class="text-[8px] text-slate-400 font-bold">Hz</p><p class="text-[11px] font-bold text-slate-600">{{ ups.hz }}</p></div>
+            <div class="flex justify-between border-t border-slate-50 pt-3 text-center">
+              <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">V</p><p class="text-sm font-bold text-slate-600">{{ ups.v }}</p></div>
+              <div class="w-1/3 border-l border-r border-slate-100"><p class="text-[10px] text-slate-400 font-bold">A</p><p class="text-sm font-bold text-slate-600">{{ ups.a }}</p></div>
+              <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold text-slate-600">{{ ups.hz }}</p></div>
             </div>
           </Card>
         </div>
@@ -129,33 +131,35 @@
       </Card>
     </div>
 
-    <!-- ================= TAB 3: SISTEM RECTIFIER ================= -->
+    <!-- ================= TAB 3: SISTEM RECTIFIER (SARAN 2) ================= -->
     <div v-if="activeTab === 'rectifier'" class="flex flex-col gap-4 animate-fade-in">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card title="Total Rectifier Load" class="lg:col-span-1 border-l-4 border-l-sky-500">
-          <div class="text-center py-2 border-b border-slate-100 mb-2 pb-2">
+      
+      <!-- Grid Utama: 3 Kolom. Otomatis menjadi 2 Baris Sempurna (Total 6 Kartu) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-stretch">
+        
+        <!-- Kartu 1: Total Rectifier (Di-highlight) -->
+        <Card title="Total Rectifier Load" class="border-l-4 border-l-sky-500 shadow-md" bodyClass="p-4 flex flex-col justify-center h-full bg-sky-50/30">
+          <div class="text-center mb-4">
             <span class="text-4xl font-bold text-sky-600">{{ totalRecti.kva }}</span><span class="text-xs text-slate-500 ml-1 font-bold">kVA</span>
           </div>
-          <div class="grid grid-cols-3 text-center gap-1">
-            <div><p class="text-[10px] text-slate-400 font-bold">V</p><p class="text-sm font-bold text-slate-700">{{ totalRecti.voltage }}</p></div>
-            <div class="border-l border-r border-slate-100"><p class="text-[10px] text-slate-400 font-bold">A</p><p class="text-sm font-bold text-slate-700">{{ totalRecti.current }}</p></div>
-            <div><p class="text-[10px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold text-slate-700">{{ totalRecti.freq }}</p></div>
+          <div class="flex justify-between border-t border-sky-100 pt-3 text-center">
+            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">V</p><p class="text-base font-bold text-slate-700">{{ totalRecti.voltage }}</p></div>
+            <div class="w-1/3 border-l border-r border-sky-100"><p class="text-[10px] text-slate-400 font-bold">A</p><p class="text-base font-bold text-slate-700">{{ totalRecti.current }}</p></div>
+            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">Hz</p><p class="text-base font-bold text-slate-700">{{ totalRecti.freq }}</p></div>
           </div>
-          <template #footer><div class="flex justify-between items-center text-[10px] text-slate-400"><span>Update:</span><span class="font-medium text-slate-500">{{ lastUpdated }}</span></div></template>
         </Card>
 
-        <div class="lg:col-span-3 grid grid-cols-3 sm:grid-cols-4 xl:grid-cols-5 gap-2">
-          <Card v-for="recti in rectiList" :key="recti.name" :title="recti.name" bodyClass="p-2">
-            <div class="text-center mb-1">
-              <span class="text-lg font-bold text-slate-700">{{ recti.kva }}</span><span class="text-[8px] text-slate-500 ml-1">kVA</span>
-            </div>
-            <div class="flex justify-between border-t border-slate-50 pt-1 text-center">
-              <div class="w-1/3"><p class="text-[7px] text-slate-400 font-bold">V</p><p class="text-[10px] font-bold text-slate-600">{{ recti.v }}</p></div>
-              <div class="w-1/3 border-l border-r border-slate-100"><p class="text-[7px] text-slate-400 font-bold">A</p><p class="text-[10px] font-bold text-slate-600">{{ recti.a }}</p></div>
-              <div class="w-1/3"><p class="text-[7px] text-slate-400 font-bold">Hz</p><p class="text-[10px] font-bold text-slate-600">{{ recti.hz }}</p></div>
-            </div>
-          </Card>
-        </div>
+        <!-- Kartu 2-6: Individual Panel -->
+        <Card v-for="recti in rectiList" :key="recti.name" :title="recti.name" bodyClass="p-4 flex flex-col justify-center h-full">
+          <div class="text-center mb-4">
+            <span class="text-2xl font-bold text-slate-700">{{ recti.kva }}</span><span class="text-[10px] text-slate-500 ml-1">kVA</span>
+          </div>
+          <div class="flex justify-between border-t border-slate-50 pt-3 text-center">
+            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">V</p><p class="text-sm font-bold text-slate-600">{{ recti.v }}</p></div>
+            <div class="w-1/3 border-l border-r border-slate-100"><p class="text-[10px] text-slate-400 font-bold">A</p><p class="text-sm font-bold text-slate-600">{{ recti.a }}</p></div>
+            <div class="w-1/3"><p class="text-[10px] text-slate-400 font-bold">Hz</p><p class="text-sm font-bold text-slate-600">{{ recti.hz }}</p></div>
+          </div>
+        </Card>
       </div>
 
       <!-- GRAFIK TREN RECTIFIER -->
@@ -207,7 +211,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import Card from '@/components/Card.vue'
 import ConnectionNotif from '@/components/ConnectionNotif.vue'
 import api from '@/services/api'
@@ -215,22 +219,48 @@ import { Download, X, Loader2 } from '@lucide/vue'
 
 // --- STATE NAVIGASI & NOTIFIKASI ---
 const activeTab = ref('panel')
-const tabs = ref([{ id: 'panel', label: 'Main Panel & PUE' }, { id: 'ups', label: 'Sistem UPS' }, { id: 'rectifier', label: 'Sistem Rectifier' }])
+const tabs = ref([
+  { id: 'panel', label: 'Main Panel & PUE' }, 
+  { id: 'ups', label: 'Sistem UPS' }, 
+  { id: 'rectifier', label: 'Sistem Rectifier' }
+])
 
 const selectedRange = ref('1h')
-const ranges = ref([{ label: '1 Jam', value: '1h' }, { label: '1 Hari', value: '1d' }, { label: '1 Minggu', value: '1w' }])
+const ranges = ref([
+  { label: '1 Jam', value: '1h' }, 
+  { label: '1 Hari', value: '1d' }, 
+  { label: '1 Minggu', value: '1w' }
+])
 
 const apiError = ref(false)
 const notifRef = ref(null)
 
-// --- STATE DATA REALTIME ---
+// --- STATE DATA REALTIME (Termasuk Inisialisasi Offline/Bawaan) ---
 const pueValue = ref(0)
 const lvmdp = ref({ kva: 0, voltage: 0, current: 0, freq: 0 })
 const itLoad = ref({ kva: 0, voltage: 0, current: 0, freq: 0 })
 const totalUps = ref({ kva: 0, voltage: 0, current: 0, freq: 0 })
 const totalRecti = ref({ kva: 0, voltage: 0, current: 0, freq: 0 })
-const upsList = ref([])
-const rectiList = ref([])
+
+const defaultUpsList = () => [
+  { name: 'UPS 2.02', kva: 0, v: 0, a: 0, hz: 0 },
+  { name: 'UPS 2.03', kva: 0, v: 0, a: 0, hz: 0 },
+  { name: 'UPS 3.01', kva: 0, v: 0, a: 0, hz: 0 },
+  { name: 'UPS 3.02', kva: 0, v: 0, a: 0, hz: 0 },
+  { name: 'UPS 5.01', kva: 0, v: 0, a: 0, hz: 0 },
+  { name: 'UPS 5.02', kva: 0, v: 0, a: 0, hz: 0 }
+]
+
+const defaultRectiList = () => [
+  { name: 'Panel 2.05', kva: 0, v: 0, a: 0, hz: 0 },
+  { name: 'Panel 2.36', kva: 0, v: 0, a: 0, hz: 0 },
+  { name: 'Panel 3.05', kva: 0, v: 0, a: 0, hz: 0 },
+  { name: 'Panel 3.10', kva: 0, v: 0, a: 0, hz: 0 },
+  { name: 'Panel 4.29', kva: 0, v: 0, a: 0, hz: 0 }
+]
+
+const upsList = ref(defaultUpsList())
+const rectiList = ref(defaultRectiList())
 
 // --- STATE DATA GRAFIK ---
 const chartPueSeries = ref([])
@@ -297,14 +327,14 @@ const handleApiError = () => {
     notifRef.value?.showError('Koneksi Backend Terputus!', 'Gagal mengambil data. Mereset sistem ke nilai 0...')
   }
   
-  // Reset Semua Angka ke 0
+  // Reset Semua Angka ke 0 beserta fallback panel
   pueValue.value = 0
   lvmdp.value = { kva: 0, voltage: 0, current: 0, freq: 0 }
   itLoad.value = { kva: 0, voltage: 0, current: 0, freq: 0 }
   totalUps.value = { kva: 0, voltage: 0, current: 0, freq: 0 }
   totalRecti.value = { kva: 0, voltage: 0, current: 0, freq: 0 }
-  upsList.value = upsList.value.map(u => ({ ...u, kva: 0, v: 0, a: 0, hz: 0 }))
-  rectiList.value = rectiList.value.map(r => ({ ...r, kva: 0, v: 0, a: 0, hz: 0 }))
+  upsList.value = defaultUpsList()
+  rectiList.value = defaultRectiList()
 
   // Kosongkan Grafik
   chartPueSeries.value = []
@@ -315,15 +345,12 @@ const handleApiError = () => {
 }
 
 // --- KONFIGURASI GRAFIK APEXCHARTS ---
-// PENTING: xaxis/grid/dataLabels/tooltip harus di level atas objek options,
-// BUKAN di-nest di dalam `chart:` — kalau di dalam `chart:`, ApexCharts
-// mengabaikannya dan balik ke default (dataLabels aktif, xaxis jadi kategori teks mentah).
 const commonChartOptions = {
   fontFamily: 'inherit',
   xaxis: { type: 'datetime', axisBorder: { show: false }, tooltip: { enabled: false } },
   grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
   dataLabels: { enabled: false },
-  markers: { size: 0 }, // titik marker dimatikan, aktif hanya saat hover (hitbox tetap ada)
+  markers: { size: 0 }, 
   tooltip: { x: { format: 'dd MMM yyyy, HH:mm' } }
 }
 
@@ -335,17 +362,15 @@ const chartOptionsSingle = ref({
   stroke: { curve: 'smooth', width: 2 }
 })
 
-// Untuk Multi-Area (Banyak Tumpukan UPS)
 const chartOptionsMulti = ref({
   ...commonChartOptions,
   chart: { type: 'area', toolbar: { show: false }, animations: { enabled: false } },
   colors: ['#0284c7', '#0ea5e9', '#38bdf8', '#7dd3fc', '#bae6fd', '#0369a1'],
-  fill: { type: 'solid', opacity: 0.15 }, // Opacity rendah agar tumpukan terlihat jelas
+  fill: { type: 'solid', opacity: 0.15 }, 
   stroke: { curve: 'smooth', width: 2 },
   legend: { position: 'top', horizontalAlign: 'right' }
 })
 
-// Untuk Multi-Line (Rectifier yang datanya terlalu rapat jika pakai Area)
 const chartOptionsMultiLine = ref({
   ...commonChartOptions,
   chart: { type: 'line', toolbar: { show: false }, animations: { enabled: false } },
@@ -369,7 +394,6 @@ onMounted(() => {
   fetchRealtime()
   fetchTrends()
   
-  // Refresh Data Realtime & Trends setiap 5 detik
   timer = setInterval(() => {
     updateTime()
     fetchRealtime()
@@ -384,7 +408,12 @@ onUnmounted(() => {
 // --- LOGIKA MODAL DOWNLOAD ---
 const isDownloadModalOpen = ref(false)
 const isDownloading = ref(false)
-const downloadOptions = ['PUE', 'Rectifier', 'UPS', 'Panel 2.05', 'Panel 2.36', 'Panel 3.05', 'Panel 3.10', 'Panel 4.29', 'UPS 2.02', 'UPS 2.03', 'UPS 3.01', 'UPS 3.02', 'UPS 5.01', 'UPS 5.02', 'All Load']
+const downloadOptions = [
+  'PUE', 'Rectifier', 'UPS', 
+  'Panel 2.05', 'Panel 2.36', 'Panel 3.05', 'Panel 3.10', 'Panel 4.29', 
+  'UPS 2.02', 'UPS 2.03', 'UPS 3.01', 'UPS 3.02', 'UPS 5.01', 'UPS 5.02', 
+  'All Load'
+]
 const formatOptions = [
   { value: 'excel', label: 'Excel (.xlsx)' },
   { value: 'pdf', label: 'PDF (.pdf)' }
