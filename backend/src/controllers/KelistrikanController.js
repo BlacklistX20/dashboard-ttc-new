@@ -5,7 +5,7 @@ const {
   PerSecond, Pue, Lvmdp, It, Recti, Ups,
   P205, P236, P305, P310, P429,
   Ups202, Ups203, Ups301, Ups302, Ups501, Ups502
-} = require('../models/Power');
+} = require('../models/PowerModel');
 
 // Helper: Menentukan Waktu Mulai (Range Filter)
 const getStartDate = (range) => {

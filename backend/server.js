@@ -4,11 +4,11 @@ const express = require('express');
 const cors = require('cors');
 const { dbFuel, dbPotency, dbPower, dbTemp, dbGas } = require('./src/config/database');
 
-const dashboardRoutes = require('./src/routes/dashboardRoutes');
-const kelistrikanRoutes = require('./src/routes/kelistrikanRoutes');
+const dashboardRoutes = require('./src/routes/DashboardRoutes');
+const kelistrikanRoutes = require('./src/routes/KelistrikanRoutes');
 const suhuRoutes = require('./src/routes/SuhuRoutes');
-const tangkiRoutes = require('./src/routes/tangkiRoutes');
-const gasRoutes = require('./src/routes/gasRoutes'); 
+const tangkiRoutes = require('./src/routes/TangkiRoutes');
+const gasRoutes = require('./src/routes/GasRoutes'); 
 
 const app = express();
 app.use(cors());

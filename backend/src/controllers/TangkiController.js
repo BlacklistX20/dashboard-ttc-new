@@ -1,4 +1,4 @@
-const { Daily, Monthly } = require('../models/Fuel');
+const { Daily, Monthly } = require('../models/FuelModel');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const { Op } = require('sequelize');

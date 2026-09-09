@@ -1,7 +1,7 @@
-const { Pue, PerSecond: PowerPerSecond } = require('../models/Power');
-const { TempPerSecond } = require('../models/Temp');
-const { Daily, Monthly } = require('../models/Fuel');
-const { PerSecond: GasPerSecond } = require('../models/Gas'); // Perbarui import model Gas
+const { Pue, PerSecond: PowerPerSecond } = require('../models/PowerModel');
+const { TempPerSecond } = require('../models/TempModel');
+const { Daily, Monthly } = require('../models/FuelModel');
+const { PerSecond: GasPerSecond } = require('../models/GasModel'); // Perbarui import model Gas
 
 exports.getDashboardData = async (req, res) => {
   try {

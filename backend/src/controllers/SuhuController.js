@@ -7,7 +7,7 @@ const {
   Bss4, Core3, Csps2, Interkoneksi4,
   DataCenter5, Invas3, Msc2, Transmisi4,
   TempPerSecond
-} = require('../models/Temp');
+} = require('../models/TempModel');
 
 // ==========================================================
 // KONFIGURASI RUANGAN

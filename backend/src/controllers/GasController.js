@@ -1,4 +1,4 @@
-const { PerSecond, VendorHistory, ControlHistory, Battery2History, Battery3History, Battery4History, Alert } = require('../models/Gas');
+const { PerSecond, VendorHistory, ControlHistory, Battery2History, Battery3History, Battery4History, Alert } = require('../models/GasModel');
 const { Op } = require('sequelize');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
