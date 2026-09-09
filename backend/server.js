@@ -2,13 +2,14 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
-const { dbFuel, dbPotency, dbPower, dbTemp, dbGas } = require('./src/config/database');
+const { dbFuel, dbPotency, dbPower, dbTemp, dbGas, dbControl } = require('./src/config/database');
 
 const dashboardRoutes = require('./src/routes/DashboardRoutes');
 const kelistrikanRoutes = require('./src/routes/KelistrikanRoutes');
 const suhuRoutes = require('./src/routes/SuhuRoutes');
 const tangkiRoutes = require('./src/routes/TangkiRoutes');
 const gasRoutes = require('./src/routes/GasRoutes'); 
+const controlRoutes = require('./src/routes/ControlRoutes');
 
 const app = express();
 app.use(cors());
@@ -22,6 +23,7 @@ const testConnections = async () => {
     await dbPower.authenticate();
     await dbTemp.authenticate();
     await dbGas.authenticate();
+    await dbControl.authenticate();
     console.log('✅ Berhasil terhubung ke 5 Database (Fuel, Potency, Power, Temp, Gas)!');
 
     // Tambahkan sinkronisasi tabel di sini (tanpa force: true agar data tidak hilang)
@@ -30,6 +32,7 @@ const testConnections = async () => {
     await dbPower.sync();
     await dbTemp.sync();
     await dbGas.sync();
+    await dbControl.sync();
     console.log('✅ Sinkronisasi semua tabel berhasil!');
   } catch (error) {
     console.error('❌ Gagal terhubung ke database:', error);
@@ -41,7 +44,8 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/kelistrikan', kelistrikanRoutes);
 app.use('/api/suhu', suhuRoutes);
 app.use('/api/tangki', tangkiRoutes);
-app.use('/api/gas', gasRoutes); 
+app.use('/api/gas', gasRoutes);
+app.use('/api/control', controlRoutes);
 
 // ==========================================
 
