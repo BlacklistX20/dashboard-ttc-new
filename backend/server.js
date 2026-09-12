@@ -9,7 +9,8 @@ const kelistrikanRoutes = require('./src/routes/KelistrikanRoutes');
 const suhuRoutes = require('./src/routes/SuhuRoutes');
 const tangkiRoutes = require('./src/routes/TangkiRoutes');
 const gasRoutes = require('./src/routes/GasRoutes'); 
-const controlRoutes = require('./src/routes/ControlRoutes');
+const valveRoutes = require('./src/routes/ValveRoutes');
+const pacRoutes = require('./src/routes/PacRoutes');
 
 const app = express();
 app.use(cors());
@@ -45,7 +46,8 @@ app.use('/api/kelistrikan', kelistrikanRoutes);
 app.use('/api/suhu', suhuRoutes);
 app.use('/api/tangki', tangkiRoutes);
 app.use('/api/gas', gasRoutes);
-app.use('/api/control', controlRoutes);
+app.use('/api/valve', valveRoutes);
+app.use('/api/pac', pacRoutes);
 
 // ==========================================
 

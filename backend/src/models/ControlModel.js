@@ -1,6 +1,4 @@
 const { DataTypes } = require('sequelize');
-
-// Pastikan Anda nanti menambahkan dbControl di file database.js Anda
 const { dbControl } = require('../config/database'); 
 
 const DeviceState = dbControl.define('DeviceState', {
@@ -59,4 +57,19 @@ const ControlLog = dbControl.define('ControlLog', {
   updatedAt: false // Tabel log hanya mencatat waktu dibuat
 });
 
-module.exports = { DeviceState, ControlLog };
+const PacSetting = dbControl.define('PacSetting', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, defaultValue: 1 },
+  temp_mode: { type: DataTypes.TINYINT, defaultValue: 1 },
+  temp_min: { type: DataTypes.INTEGER, defaultValue: 18 },
+  temp_max: { type: DataTypes.INTEGER, defaultValue: 24 },
+  time_mode: { type: DataTypes.TINYINT, defaultValue: 0 },
+  time_on: { type: DataTypes.STRING(5), defaultValue: '08:00' },
+  time_off: { type: DataTypes.STRING(5), defaultValue: '17:00' }
+}, {
+  tableName: 'pac_settings',
+  timestamps: true,
+  createdAt: false,
+  updatedAt: 'updated_at'
+});
+
+module.exports = { DeviceState, ControlLog, PacSetting };
