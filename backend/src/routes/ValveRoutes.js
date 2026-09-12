@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const controlController = require('../controllers/ControlController');
+const valveController = require('../controllers/ValveController');
 
 // Endpoint untuk mengambil status terbaru semua device
-router.get('/states', controlController.getStates);
+router.get('/states', valveController.getStates);
 
 // Endpoint untuk merubah status simulasi Arduino (Connected/Disconnected)
-router.post('/arduino', controlController.toggleArduino);
+router.post('/arduino', valveController.toggleArduino);
 
 // Endpoint untuk membuka/menutup Valve
-router.post('/valve', controlController.toggleValve);
+router.post('/valve', valveController.toggleValve);
 
 module.exports = router;
