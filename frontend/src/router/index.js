@@ -7,6 +7,7 @@ import KontrolValveView from '../views/KontrolValveView.vue'
 import KontrolPacView from '../views/KontrolPacView.vue'
 import PotensiView from '../views/PotensiView.vue'
 import GasView from '@/views/GasView.vue'
+import RiwayatPmView from '@/views/RiwayatPmView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -18,7 +19,8 @@ const router = createRouter({
     { path: '/valve', name: 'valve', component: KontrolValveView },
     { path: '/pac', name: 'pac', component: KontrolPacView },
     { path: '/potensi/:kategori', name: 'potensi', component: PotensiView },
-    { path: '/gas', name: 'gas', component: GasView }
+    { path: '/gas', name: 'gas', component: GasView },
+    { path: '/riwayat', name: 'riwayat', component: RiwayatPmView },
     // ... route lain ...
   ]
 })

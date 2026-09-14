@@ -111,7 +111,7 @@
         <button 
           @click="isInventarisOpen = !isInventarisOpen" 
           class="w-full flex items-center justify-between gap-4 px-3 py-3 transition-all whitespace-nowrap"
-          :class="route.path.includes('/potensi') ? 'bg-slate-800 border-l-4 border-[#ED1C24] text-white rounded-r-xl ml-0' : 'text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl ml-1'"
+          :class="['/potensi', '/riwayat'].includes(route.path) ? 'bg-slate-800 border-l-4 border-[#ED1C24] text-white rounded-r-xl ml-0' : 'text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl ml-1'"
         >
           <div class="flex items-center gap-4">
             <Database class="w-6 h-6 flex-shrink-0" />
@@ -122,6 +122,13 @@
 
         <div v-show="isInventarisOpen && isHovered" class="flex flex-col gap-1 mt-2 pl-6 pr-3 animate-fade-in-down">
           
+          <router-link to="/riwayat" v-slot="{ isActive, href, navigate }">
+            <a :href="href" @click="navigate" class="flex items-center gap-3 py-2 px-3 rounded-lg transition-colors text-sm" :class="isActive ? 'bg-[#ED1C24] text-white font-bold shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-700'">
+              <Files class="w-4 h-4 flex-shrink-0" />
+              <span>Riwayat PM</span>
+            </a>
+          </router-link>
+
           <router-link 
             v-for="item in subMenus" 
             :key="item.path"
@@ -149,7 +156,7 @@ import { useRoute } from 'vue-router'
 import { 
   LayoutDashboard, Activity, SlidersHorizontal, Database, ChevronDown, 
   Zap, Thermometer, Fuel, Droplets, Fan, 
-  Power, Laptop, Snowflake, Flame, Beaker, Shield, Lightbulb, Cog, Container
+  Power, Laptop, Snowflake, Flame, Beaker, Shield, Lightbulb, Cog, Container, Files
 } from '@lucide/vue'
 
 const route = useRoute()
