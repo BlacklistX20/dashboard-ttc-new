@@ -3,12 +3,9 @@ services:
     build: ./backend
     container_name: ttc_backend
     restart: always
-    ports:
-      - "5000:5000"
+    network_mode: "host"
     env_file:
       - ./backend/.env
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   frontend:
     build: ./frontend
