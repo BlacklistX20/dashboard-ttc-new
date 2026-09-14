@@ -11,6 +11,7 @@ const tangkiRoutes = require('./src/routes/TangkiRoutes');
 const gasRoutes = require('./src/routes/GasRoutes'); 
 const valveRoutes = require('./src/routes/ValveRoutes');
 const pacRoutes = require('./src/routes/PacRoutes');
+const potencyRoutes = require('./src/routes/PotencyRoutes');
 
 const app = express();
 app.use(cors());
@@ -48,6 +49,7 @@ app.use('/api/tangki', tangkiRoutes);
 app.use('/api/gas', gasRoutes);
 app.use('/api/valve', valveRoutes);
 app.use('/api/pac', pacRoutes);
+app.use('/api/potency', potencyRoutes);
 
 // ==========================================
 
