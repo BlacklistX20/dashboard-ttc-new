@@ -6,7 +6,7 @@ services:
     container_name: ttc_backend
     restart: always
     ports:
-      - "3000:3000"
+      - "5000:5000"
     env_file:
       - ./backend/.env
     extra_hosts:
