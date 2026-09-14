@@ -373,7 +373,7 @@ const pueChartOptions = ref({
   dataLabels: { enabled: false },
   stroke: { curve: 'smooth', width: 3 },
   xaxis: { categories: ['H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'H-1', 'Hari Ini'], axisBorder: { show: false }, axisTicks: { show: false } },
-  yaxis: { min: 0.0, max: 2.0, tickAmount: 4 },
+  yaxis: { min: 1.4, max: 2.0, tickAmount: 2 },
   grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
   noData: { text: 'Tidak ada data', align: 'center', verticalAlign: 'middle', style: { color: '#94a3b8', fontSize: '14px', fontFamily: 'inherit' } }
 })
