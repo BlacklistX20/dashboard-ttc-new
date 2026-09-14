@@ -4,6 +4,12 @@ require('dotenv').config();
 const dbConfig = {
   host: process.env.DB_HOST,
   dialect: 'mysql',
+  pool: {
+      max: 30,         // Tingkatkan batas maksimal koneksi (default 5)
+      min: 0,          // Minimal koneksi yang dipertahankan
+      acquire: 60000,  // Waktu tunggu antrean hingga 60 detik (60000 milidetik)
+      idle: 10000      // Putus koneksi jika menganggur lebih dari 10 detik
+  },
   logging: false, // Matikan log SQL di terminal agar rapi
 };
 
