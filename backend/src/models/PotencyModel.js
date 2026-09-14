@@ -183,6 +183,21 @@ const Tank = dbPotency.define('Tank', {
   info: { type: DataTypes.STRING(500), allowNull: false }
 }, standardOptions('tank'));
 
+const PmHistory = dbPotency.define('PmHistory', {
+  id: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
+  plan_date: { type: DataTypes.DATEONLY, allowNull: false },
+  actual_date: { type: DataTypes.DATEONLY, allowNull: true },
+  vendor: { type: DataTypes.STRING(100), allowNull: false },
+  device_type: { type: DataTypes.STRING(50), allowNull: false },
+  status: { type: DataTypes.STRING(50), allowNull: false },
+  document_path: { type: DataTypes.STRING(255), allowNull: true }
+}, {
+  tableName: 'pm_histories',
+  timestamps: true,
+  createdAt: 'created_at',
+  updatedAt: 'updated_at'
+});
+
 module.exports = {
-  Finishing, Safety, Transport, Furniture, Cool, Fire, Light, PowerAsset, Pump, Rack, Security, Tank
+  Finishing, Safety, Transport, Furniture, Cool, Fire, Light, PowerAsset, Pump, Rack, Security, Tank, PmHistory
 };

@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
 const { dbFuel, dbPotency, dbPower, dbTemp, dbGas, dbControl } = require('./src/config/database');
 
@@ -12,6 +13,7 @@ const gasRoutes = require('./src/routes/GasRoutes');
 const valveRoutes = require('./src/routes/ValveRoutes');
 const pacRoutes = require('./src/routes/PacRoutes');
 const potencyRoutes = require('./src/routes/PotencyRoutes');
+const riwayatRoutes = require('./src/routes/RiwayatRoutes');
 
 const app = express();
 app.use(cors());
@@ -50,6 +52,8 @@ app.use('/api/gas', gasRoutes);
 app.use('/api/valve', valveRoutes);
 app.use('/api/pac', pacRoutes);
 app.use('/api/potency', potencyRoutes);
+app.use('/api/riwayat', riwayatRoutes);
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // ==========================================
 
