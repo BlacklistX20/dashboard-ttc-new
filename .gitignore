@@ -42,4 +42,4 @@ __screenshots__/
 .env
 .env.*
 
-public/uploads/
+public
