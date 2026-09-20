@@ -107,7 +107,20 @@
 
         <!-- Body Modal (Daftar Sensor Suhu) -->
         <div class="p-5 max-h-[60vh] overflow-y-auto">
-          <div class="flex flex-col gap-3">
+
+          <!-- State: sedang mengambil data detail ruangan -->
+          <div v-if="isDetailLoading" class="flex flex-col items-center justify-center py-8 text-slate-400">
+            <Loader2 class="w-6 h-6 animate-spin mb-2" />
+            <span class="text-xs font-medium">Memuat data sensor...</span>
+          </div>
+
+          <!-- State: gagal mengambil data detail ruangan -->
+          <div v-else-if="detailError" class="flex flex-col items-center justify-center py-8 text-red-400">
+            <WifiOff class="w-6 h-6 mb-2" />
+            <span class="text-xs font-medium">Gagal memuat data sensor ruangan ini.</span>
+          </div>
+
+          <div v-else class="flex flex-col gap-3">
             <div 
               v-for="(sensor, idx) in selectedRoom.sensors" 
               :key="idx"
@@ -118,9 +131,9 @@
                 <Thermometer class="w-5 h-5" :class="getTempStatus(sensor.temp).textClass" />
                 <span class="font-medium text-slate-700 text-sm">{{ sensor.name }}</span>
               </div>
-              <div class="font-bold" :class="[apiError || sensor.temp === null ? 'text-sm italic' : 'text-lg', getTempStatus(sensor.temp).textClass]">
-                {{ apiError ? 'Offline' : (sensor.temp !== null ? sensor.temp : 'No Data') }}
-                <span v-if="!apiError && sensor.temp !== null" class="text-sm opacity-60 ml-1">°C</span>
+              <div class="font-bold" :class="[sensor.temp === null ? 'text-sm italic' : 'text-lg', getTempStatus(sensor.temp).textClass]">
+                {{ sensor.temp !== null ? sensor.temp : 'No Data' }}
+                <span v-if="sensor.temp !== null" class="text-sm opacity-60 ml-1">°C</span>
               </div>
             </div>
           </div>
@@ -218,10 +231,23 @@ const tabs = ref([
 
 const isModalOpen = ref(false)
 const selectedRoom = ref(null)
+const isDetailLoading = ref(false)
+const detailError = ref(false)
 
-const openModal = (room) => {
-  selectedRoom.value = room
+const openModal = async (room) => {
+  selectedRoom.value = { ...room, sensors: [] }
   isModalOpen.value = true
+  isDetailLoading.value = true
+  detailError.value = false
+
+  try {
+    const res = await api.get(`/suhu/detail/${room.key}`)
+    selectedRoom.value = { ...room, sensors: res.data.sensors }
+  } catch (err) {
+    detailError.value = true
+  } finally {
+    isDetailLoading.value = false
+  }
 }
 const closeModal = () => {
   isModalOpen.value = false
@@ -253,8 +279,7 @@ const getDefaultRoomData = () => {
       name,
       avgTemp: null,
       avgHum: null,
-      isConnected: false, 
-      sensors: [{ name: 'Sensor 1', temp: null }, { name: 'Sensor 2', temp: null }]
+      isConnected: false
     }))
   }
   return data
@@ -289,8 +314,7 @@ const handleApiError = () => {
       ...room,
       avgTemp: null,
       avgHum: null,
-      isConnected: false,
-      sensors: room.sensors.map(s => ({ ...s, temp: null }))
+      isConnected: false
     }))
   })
 }
@@ -336,7 +360,7 @@ onMounted(() => {
   timer = setInterval(() => {
     updateTime()
     fetchRealtime()
-  }, 1000) // Catatan: Polling 1 detik mungkin memberatkan server jika banyak user
+  }, 15000) // Diubah dari 1000ms -> 15000ms untuk mengurangi beban query ke database
 })
 onUnmounted(() => { if (timer) clearInterval(timer) })
 </script>
