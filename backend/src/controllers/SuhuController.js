@@ -53,38 +53,25 @@ ROOM_CONFIG.forEach(r => { ROOM_BY_KEY[r.key] = r; });
 exports.getRealtime = async (req, res) => {
   try {
     // Ringkasan (rata-rata suhu/kelembapan + status koneksi) - 1 query untuk semua ruangan
+    // Catatan: breakdown per sensor TIDAK diambil di sini lagi, dipindah ke
+    // endpoint getRoomDetail yang hanya dipanggil saat user klik tombol Detail
+    // pada 1 ruangan tertentu, supaya polling berkala tidak perlu query 22 tabel.
     const perSecondRows = await TempPerSecond.findAll();
     const perSecondMap = {};
     perSecondRows.forEach(item => { perSecondMap[item.id] = item; });
-
-    // Breakdown per sensor - ambil baris terbaru dari tiap tabel detail ruangan
-    const latestRows = await Promise.all(
-      ROOM_CONFIG.map(room => room.model.findOne({ order: [['updated_at', 'DESC']] }))
-    );
-    const latestMap = {};
-    ROOM_CONFIG.forEach((room, idx) => { latestMap[room.id] = latestRows[idx]; });
 
     const grouped = { lt1: [], lt2: [], lt3: [], lt4: [], lt5: [] };
 
     ROOM_CONFIG.forEach(room => {
       const summary = perSecondMap[room.id];
-      const latest = latestMap[room.id];
-
-      const sensors = [];
-      for (let i = 1; i <= room.sensorCount; i++) {
-        sensors.push({
-          name: `Sensor Suhu ${i}`,
-          temp: latest ? parseFloat(latest[`t${i}`]) : null
-        });
-      }
 
       grouped[room.floor].push({
         id: room.id,
+        key: room.key,
         name: room.label,
         avgTemp: summary ? parseFloat(summary.temp) : null,
         avgHum: summary ? parseFloat(summary.hum) : null,
-        isConnected: summary ? summary.status === 'C' : false,
-        sensors
+        isConnected: summary ? summary.status === 'C' : false
       });
     });
 
@@ -92,6 +79,37 @@ exports.getRealtime = async (req, res) => {
   } catch (error) {
     console.error('Realtime Suhu Error:', error);
     res.status(500).json({ error: 'Gagal mengambil data suhu realtime' });
+  }
+};
+
+// ==========================================================
+// 1b. DETAIL PER RUANGAN (breakdown per sensor)
+// Dipanggil hanya saat user klik tombol Detail pada 1 kartu ruangan,
+// jadi cuma query 1 tabel, bukan 22 tabel seperti sebelumnya.
+// ==========================================================
+exports.getRoomDetail = async (req, res) => {
+  try {
+    const { key } = req.params;
+
+    const config = ROOM_BY_KEY[key];
+    if (!config) {
+      return res.status(400).json({ error: `Ruangan '${key}' tidak dikenali` });
+    }
+
+    const latest = await config.model.findOne({ order: [['updated_at', 'DESC']] });
+
+    const sensors = [];
+    for (let i = 1; i <= config.sensorCount; i++) {
+      sensors.push({
+        name: `Sensor Suhu ${i}`,
+        temp: latest ? parseFloat(latest[`t${i}`]) : null
+      });
+    }
+
+    res.json({ key: config.key, name: config.label, sensors });
+  } catch (error) {
+    console.error('Room Detail Suhu Error:', error);
+    res.status(500).json({ error: 'Gagal mengambil detail ruangan' });
   }
 };
 
