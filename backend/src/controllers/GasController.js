@@ -1,5 +1,5 @@
 const { PerSecond, VendorHistory, ControlHistory, Battery2History, Battery3History, Battery4History, Alert } = require('../models/GasModel');
-const { Op } = require('sequelize');
+const { Op, QueryTypes } = require('sequelize');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const moment = require('moment');
@@ -9,25 +9,46 @@ const ModelMap = {
   battery2: Battery2History, battery3: Battery3History, battery4: Battery4History
 };
 
-const formatRoomData = async (roomName, HistoryModel, gasType) => {
-  const realtime = await PerSecond.findOne({ where: { gas: gasType, room: roomName } });
-  
+// Cache stats min/max harian per ruangan. Nilai ini jarang berubah (cuma naik/turun
+// kalau ada pembacaan baru yang lebih ekstrem), jadi tidak perlu dihitung ulang dari
+// nol tiap polling 5 detik - cukup disegarkan tiap STATS_CACHE_TTL_MS.
+const STATS_CACHE_TTL_MS = 60 * 1000; // 60 detik
+const statsCache = new Map(); // key: `${gasType}_${roomName}` -> { data, expiresAt }
+
+const getDailyStats = async (roomName, HistoryModel, gasType) => {
+  const cacheKey = `${gasType}_${roomName}`;
+  const cached = statsCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.data;
+  }
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const stats = await HistoryModel.findAll({
     where: { updated_at: { [Op.gte]: today } },
     attributes: [
-      [PerSecond.sequelize.fn('MIN', PerSecond.sequelize.col('temp1')), 'minTemp'],
-      [PerSecond.sequelize.fn('MAX', PerSecond.sequelize.col('temp1')), 'maxTemp'],
-      [PerSecond.sequelize.fn('MIN', PerSecond.sequelize.col('hum1')), 'minHum'],
-      [PerSecond.sequelize.fn('MAX', PerSecond.sequelize.col('hum1')), 'maxHum'],
-      [PerSecond.sequelize.fn('MIN', PerSecond.sequelize.col('sensor1')), 'minGas'],
-      [PerSecond.sequelize.fn('MAX', PerSecond.sequelize.col('sensor1')), 'maxGas'],
+      [HistoryModel.sequelize.fn('MIN', HistoryModel.sequelize.col('temp1')), 'minTemp'],
+      [HistoryModel.sequelize.fn('MAX', HistoryModel.sequelize.col('temp1')), 'maxTemp'],
+      [HistoryModel.sequelize.fn('MIN', HistoryModel.sequelize.col('hum1')), 'minHum'],
+      [HistoryModel.sequelize.fn('MAX', HistoryModel.sequelize.col('hum1')), 'maxHum'],
+      [HistoryModel.sequelize.fn('MIN', HistoryModel.sequelize.col('sensor1')), 'minGas'],
+      [HistoryModel.sequelize.fn('MAX', HistoryModel.sequelize.col('sensor1')), 'maxGas'],
     ],
     raw: true
   });
-  const st = stats[0] || {};
+
+  const data = stats[0] || {};
+  statsCache.set(cacheKey, { data, expiresAt: Date.now() + STATS_CACHE_TTL_MS });
+  return data;
+};
+
+const formatRoomData = async (roomName, HistoryModel, gasType) => {
+  // Realtime (butuh selalu fresh tiap poll) & stats harian (di-cache) diambil paralel
+  const [realtime, st] = await Promise.all([
+    PerSecond.findOne({ where: { gas: gasType, room: roomName } }),
+    getDailyStats(roomName, HistoryModel, gasType)
+  ]);
 
   // Jika tabel per_second tidak memiliki data (kosong), kembalikan null
   if (!realtime) {
@@ -52,14 +73,17 @@ const formatRoomData = async (roomName, HistoryModel, gasType) => {
 
 const getLatestGasData = async (req, res) => {
   try {
-    const vendor = await formatRoomData('vendor', VendorHistory, 'co2');
-    const control = await formatRoomData('control', ControlHistory, 'co2');
-    const battery2 = await formatRoomData('battery2', Battery2History, 'hydrogen');
-    const battery3 = await formatRoomData('battery3', Battery3History, 'hydrogen');
-    const battery4 = await formatRoomData('battery4', Battery4History, 'hydrogen');
-    
+    const [vendor, control, battery2, battery3, battery4] = await Promise.all([
+      formatRoomData('vendor', VendorHistory, 'co2'),
+      formatRoomData('control', ControlHistory, 'co2'),
+      formatRoomData('battery2', Battery2History, 'hydrogen'),
+      formatRoomData('battery3', Battery3History, 'hydrogen'),
+      formatRoomData('battery4', Battery4History, 'hydrogen')
+    ]);
+
     res.status(200).json({ vendor, control, battery2, battery3, battery4 });
   } catch (error) {
+    console.error('Gas Realtime Error:', error);
     res.status(500).json({ success: false, message: 'Gagal mengambil data realtime' });
   }
 };
@@ -83,29 +107,52 @@ const getAlerts = async (req, res) => {
   }
 };
 
+// Ukuran bucket untuk grafik tren 24 jam - 5 menit per titik cukup detail untuk
+// dilihat tapi jauh lebih ringan daripada mengirim data mentah per detik.
+const TREND_BUCKET_SECONDS = 5 * 60;
+
 const getTrend = async (req, res) => {
   try {
     const { room } = req.query;
     const Model = ModelMap[room];
-    
+    if (!Model) {
+      return res.status(400).json({ success: false, message: `Ruangan '${room}' tidak dikenali` });
+    }
+
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
+    const tableName = Model.getTableName();
 
-    const history = await Model.findAll({
-      where: { updated_at: { [Op.gte]: yesterday } },
-      order: [['updated_at', 'ASC']]
-    });
+    // Agregasi (AVG) per bucket waktu dihitung langsung oleh MySQL, jadi Node
+    // hanya menerima hasil yang sudah ringkas (~288 titik/24 jam), bukan seluruh
+    // baris mentah per detik.
+    const rows = await Model.sequelize.query(
+      `SELECT
+         FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(updated_at) / :bucketSeconds) * :bucketSeconds) AS bucket_start,
+         AVG(temp1) AS avg_temp,
+         AVG(hum1) AS avg_hum,
+         AVG(sensor1) AS avg_gas
+       FROM \`${tableName}\`
+       WHERE updated_at >= :startDate
+       GROUP BY bucket_start
+       ORDER BY bucket_start ASC`,
+      {
+        replacements: { bucketSeconds: TREND_BUCKET_SECONDS, startDate: yesterday },
+        type: QueryTypes.SELECT
+      }
+    );
 
     const temp = [], humidity = [], gas = [];
-    history.forEach(h => {
-      const time = new Date(h.updated_at).getTime();
-      temp.push([time, parseFloat(h.temp1)]);
-      humidity.push([time, parseFloat(h.hum1)]);
-      gas.push([time, parseFloat(h.sensor1)]);
+    rows.forEach(r => {
+      const time = new Date(r.bucket_start).getTime();
+      temp.push([time, r.avg_temp !== null ? parseFloat(r.avg_temp) : null]);
+      humidity.push([time, r.avg_hum !== null ? parseFloat(r.avg_hum) : null]);
+      gas.push([time, r.avg_gas !== null ? parseFloat(r.avg_gas) : null]);
     });
 
     res.status(200).json({ temp, humidity, gas });
   } catch (error) {
+    console.error('Gas Trend Error:', error);
     res.status(500).json({ success: false, message: 'Gagal mengambil tren' });
   }
 };
