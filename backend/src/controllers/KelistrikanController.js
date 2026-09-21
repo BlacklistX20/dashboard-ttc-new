@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { Op, QueryTypes } = require('sequelize');
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const {
@@ -22,28 +22,43 @@ const getBucketMs = (range) => {
   return 0;                                     // '1h' -> data mentah, tanpa bucketing
 };
 
-// Helper: Downsampling data time-series dengan rata-rata (AVG) per bucket waktu
-const aggregateSeries = (rows, range, valueKey = 'loads') => {
+// Ambil data time-series untuk 1 tabel, sudah diagregasi (AVG) di level SQL.
+// - range '1h' (bucketMs 0): data mentah tanpa bucket, volume kecil (maks ~3600 baris/jam)
+// - range '1d'/'1w': AVG per bucket waktu dihitung langsung oleh MySQL (GROUP BY),
+//   jadi Node hanya menerima hasil yang sudah ringkas, bukan seluruh baris mentah.
+const fetchAggregatedSeries = async (model, valueColumn, range, startDate) => {
   const bucketMs = getBucketMs(range);
+
   if (bucketMs === 0) {
-    return rows.map(item => ({ x: item.updated_at, y: parseFloat(item[valueKey]) }));
+    const rows = await model.findAll({
+      where: { updated_at: { [Op.gte]: startDate } },
+      order: [['updated_at', 'ASC']],
+      attributes: [valueColumn, 'updated_at']
+    });
+    return rows.map(item => ({ x: item.updated_at, y: parseFloat(item[valueColumn]) }));
   }
-  const buckets = new Map(); // key: awal bucket (ms) -> { sum, count }
-  rows.forEach(item => {
-    const t = new Date(item.updated_at).getTime();
-    const bucketStart = Math.floor(t / bucketMs) * bucketMs;
-    const val = parseFloat(item[valueKey]);
-    if (!buckets.has(bucketStart)) buckets.set(bucketStart, { sum: 0, count: 0 });
-    const b = buckets.get(bucketStart);
-    b.sum += val;
-    b.count += 1;
-  });
-  return Array.from(buckets.entries())
-    .sort((a, b) => a[0] - b[0])
-    .map(([bucketStart, { sum, count }]) => ({
-      x: new Date(bucketStart),
-      y: parseFloat((sum / count).toFixed(2))
-    }));
+
+  const bucketSeconds = bucketMs / 1000;
+  const tableName = model.getTableName();
+
+  const rows = await model.sequelize.query(
+    `SELECT
+       FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(updated_at) / :bucketSeconds) * :bucketSeconds) AS bucket_start,
+       AVG(\`${valueColumn}\`) AS avg_value
+     FROM \`${tableName}\`
+     WHERE updated_at >= :startDate
+     GROUP BY bucket_start
+     ORDER BY bucket_start ASC`,
+    {
+      replacements: { bucketSeconds, startDate },
+      type: QueryTypes.SELECT
+    }
+  );
+
+  return rows.map(r => ({
+    x: r.bucket_start,
+    y: r.avg_value !== null ? parseFloat(r.avg_value) : null
+  }));
 };
 
 // ==========================================================
@@ -103,26 +118,24 @@ exports.getTrendRectifiers = async (req, res) => {
   try {
     const range = req.query.range || '1h';
     const startDate = getStartDate(range);
-    const whereClause = { updated_at: { [Op.gte]: startDate } };
-    const order = [['updated_at', 'ASC']];
-    const attributes = ['loads', 'updated_at'];
 
     const [p205, p236, p305, p310, p429] = await Promise.all([
-      P205.findAll({ where: whereClause, order, attributes }),
-      P236.findAll({ where: whereClause, order, attributes }),
-      P305.findAll({ where: whereClause, order, attributes }),
-      P310.findAll({ where: whereClause, order, attributes }),
-      P429.findAll({ where: whereClause, order, attributes })
+      fetchAggregatedSeries(P205, 'loads', range, startDate),
+      fetchAggregatedSeries(P236, 'loads', range, startDate),
+      fetchAggregatedSeries(P305, 'loads', range, startDate),
+      fetchAggregatedSeries(P310, 'loads', range, startDate),
+      fetchAggregatedSeries(P429, 'loads', range, startDate)
     ]);
 
     res.json([
-      { name: 'Panel 2.05', data: aggregateSeries(p205, range) },
-      { name: 'Panel 2.36', data: aggregateSeries(p236, range) },
-      { name: 'Panel 3.05', data: aggregateSeries(p305, range) },
-      { name: 'Panel 3.10', data: aggregateSeries(p310, range) },
-      { name: 'Panel 4.29', data: aggregateSeries(p429, range) }
+      { name: 'Panel 2.05', data: p205 },
+      { name: 'Panel 2.36', data: p236 },
+      { name: 'Panel 3.05', data: p305 },
+      { name: 'Panel 3.10', data: p310 },
+      { name: 'Panel 4.29', data: p429 }
     ]);
   } catch (error) {
+    console.error('Trend Rectifier Error:', error);
     res.status(500).json({ error: 'Gagal mengambil tren Rectifier' });
   }
 };
@@ -134,28 +147,26 @@ exports.getTrendUps = async (req, res) => {
   try {
     const range = req.query.range || '1h';
     const startDate = getStartDate(range);
-    const whereClause = { updated_at: { [Op.gte]: startDate } };
-    const order = [['updated_at', 'ASC']];
-    const attributes = ['loads', 'updated_at'];
 
     const [u202, u203, u301, u302, u501, u502] = await Promise.all([
-      Ups202.findAll({ where: whereClause, order, attributes }),
-      Ups203.findAll({ where: whereClause, order, attributes }),
-      Ups301.findAll({ where: whereClause, order, attributes }),
-      Ups302.findAll({ where: whereClause, order, attributes }),
-      Ups501.findAll({ where: whereClause, order, attributes }),
-      Ups502.findAll({ where: whereClause, order, attributes })
+      fetchAggregatedSeries(Ups202, 'loads', range, startDate),
+      fetchAggregatedSeries(Ups203, 'loads', range, startDate),
+      fetchAggregatedSeries(Ups301, 'loads', range, startDate),
+      fetchAggregatedSeries(Ups302, 'loads', range, startDate),
+      fetchAggregatedSeries(Ups501, 'loads', range, startDate),
+      fetchAggregatedSeries(Ups502, 'loads', range, startDate)
     ]);
 
     res.json([
-      { name: 'UPS 2.02', data: aggregateSeries(u202, range) },
-      { name: 'UPS 2.03', data: aggregateSeries(u203, range) },
-      { name: 'UPS 3.01', data: aggregateSeries(u301, range) },
-      { name: 'UPS 3.02', data: aggregateSeries(u302, range) },
-      { name: 'UPS 5.01', data: aggregateSeries(u501, range) },
-      { name: 'UPS 5.02', data: aggregateSeries(u502, range) }
+      { name: 'UPS 2.02', data: u202 },
+      { name: 'UPS 2.03', data: u203 },
+      { name: 'UPS 3.01', data: u301 },
+      { name: 'UPS 3.02', data: u302 },
+      { name: 'UPS 5.01', data: u501 },
+      { name: 'UPS 5.02', data: u502 }
     ]);
   } catch (error) {
+    console.error('Trend UPS Error:', error);
     res.status(500).json({ error: 'Gagal mengambil tren UPS' });
   }
 };
@@ -167,21 +178,16 @@ exports.getTrendMain = async (req, res) => {
   try {
     const range = req.query.range || '1h';
     const startDate = getStartDate(range);
-    const whereClause = { updated_at: { [Op.gte]: startDate } };
-    const order = [['updated_at', 'ASC']];
 
     const [lvmdp, it, pue] = await Promise.all([
-      Lvmdp.findAll({ where: whereClause, order, attributes: ['loads', 'updated_at'] }),
-      It.findAll({ where: whereClause, order, attributes: ['loads', 'updated_at'] }),
-      Pue.findAll({ where: whereClause, order, attributes: ['pue', 'updated_at'] }) // Ambil nilai PUE spesifik
+      fetchAggregatedSeries(Lvmdp, 'loads', range, startDate),
+      fetchAggregatedSeries(It, 'loads', range, startDate),
+      fetchAggregatedSeries(Pue, 'pue', range, startDate)
     ]);
 
-    res.json({
-      lvmdp: aggregateSeries(lvmdp, range, 'loads'),
-      it: aggregateSeries(it, range, 'loads'),
-      pue: aggregateSeries(pue, range, 'pue')
-    });
+    res.json({ lvmdp, it, pue });
   } catch (error) {
+    console.error('Trend Main Error:', error);
     res.status(500).json({ error: 'Gagal mengambil tren Utama' });
   }
 };
