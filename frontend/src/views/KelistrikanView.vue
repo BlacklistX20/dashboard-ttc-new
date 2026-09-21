@@ -14,7 +14,7 @@
         <!-- TAB BUTTONS -->
         <div class="flex space-x-1 bg-slate-200/60 p-1 rounded-xl">
           <button 
-            v-for="tab in tabs" :key="tab.id" @click="activeTab = tab.id"
+            v-for="tab in tabs" :key="tab.id" @click="changeTab(tab.id)"
             class="py-2 px-3 text-xs font-semibold rounded-lg transition-all"
             :class="activeTab === tab.id ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'"
           >
@@ -320,33 +320,50 @@ const fetchRealtime = async () => {
   }
 }
 
-// --- FETCH API TREN (GRAFIK) ---
-const fetchTrends = async () => {
+// --- FETCH API TREN (GRAFIK) - hanya fetch data untuk tab yang sedang aktif ---
+const fetchTrendForActiveTab = async () => {
   try {
     const range = selectedRange.value
-    // 1. Fetch Main (PUE, LVMDP, IT)
-    const resMain = await api.get(`/kelistrikan/trend/main?range=${range}`)
-    chartPueSeries.value = [{ name: 'PUE', data: resMain.data.pue }]
-    chartLvmdpSeries.value = [{ name: 'LVMDP', data: resMain.data.lvmdp }]
-    chartItLoadSeries.value = [{ name: 'IT Load', data: resMain.data.it }]
 
-    // 2. Fetch Rectifier
-    const resRecti = await api.get(`/kelistrikan/trend/rectifiers?range=${range}`)
-    chartRectiSeries.value = resRecti.data
-
-    // 3. Fetch UPS
-    const resUps = await api.get(`/kelistrikan/trend/ups?range=${range}`)
-    chartUpsSeries.value = resUps.data
-
+    if (activeTab.value === 'panel') {
+      const resMain = await api.get(`/kelistrikan/trend/main?range=${range}`)
+      chartPueSeries.value = [{ name: 'PUE', data: resMain.data.pue }]
+      chartLvmdpSeries.value = [{ name: 'LVMDP', data: resMain.data.lvmdp }]
+      chartItLoadSeries.value = [{ name: 'IT Load', data: resMain.data.it }]
+    } else if (activeTab.value === 'rectifier') {
+      const resRecti = await api.get(`/kelistrikan/trend/rectifiers?range=${range}`)
+      chartRectiSeries.value = resRecti.data
+    } else if (activeTab.value === 'ups') {
+      const resUps = await api.get(`/kelistrikan/trend/ups?range=${range}`)
+      chartUpsSeries.value = resUps.data
+    }
   } catch (err) {
     handleApiError()
   }
 }
 
-// Pantau perubahan filter range waktu agar grafik otomatis dimuat ulang
+// Pindah tab -> muat ulang tren untuk tab yang baru dibuka
+const changeTab = (tabId) => {
+  activeTab.value = tabId
+  fetchTrendForActiveTab()
+}
+
+// Pantau perubahan filter range waktu agar grafik otomatis dimuat ulang.
+// Untuk range 1d/1w cukup fetch sekali di sini (tidak di-polling berkala).
 const changeRange = (val) => {
   selectedRange.value = val
-  fetchTrends()
+  fetchTrendForActiveTab()
+  setupTrendPolling()
+}
+
+// Polling tren HANYA berjalan untuk range '1h' (tiap 60 detik).
+// Range '1d'/'1w' sengaja tidak di-polling, cukup dimuat saat range/tab diklik,
+// karena datanya sudah berupa agregat historis yang tidak berubah tiap detik.
+const setupTrendPolling = () => {
+  if (trendTimer) clearInterval(trendTimer)
+  if (selectedRange.value === '1h') {
+    trendTimer = setInterval(fetchTrendForActiveTab, 60000)
+  }
 }
 
 // --- LOGIKA ERROR (RESET ke NULL/OFFLINE) ---
@@ -414,7 +431,8 @@ const chartOptionsMultiLine = ref({
 
 // --- WAKTU UPDATE & POLLING ---
 const lastUpdated = ref('')
-let timer = null
+let realtimeTimer = null
+let trendTimer = null
 const updateTime = () => {
   const now = new Date()
   const pad = (n) => n.toString().padStart(2, '0')
@@ -424,17 +442,19 @@ const updateTime = () => {
 onMounted(() => {
   updateTime()
   fetchRealtime()
-  fetchTrends()
-  
-  timer = setInterval(() => {
+  fetchTrendForActiveTab()
+  setupTrendPolling()
+
+  // Realtime (angka panel/UPS/rectifier) tetap polling cepat & ringan (1 query/panggilan)
+  realtimeTimer = setInterval(() => {
     updateTime()
     fetchRealtime()
-    fetchTrends()
   }, 5000)
 })
 
 onUnmounted(() => {
-  if (timer) clearInterval(timer)
+  if (realtimeTimer) clearInterval(realtimeTimer)
+  if (trendTimer) clearInterval(trendTimer)
 })
 
 // --- LOGIKA MODAL DOWNLOAD ---
