@@ -38,7 +38,7 @@
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         
         <!-- ================= KARTU SUHU ================= -->
-        <Card title="Suhu Ruangan" bodyClass="p-4">
+        <Card title="Suhu Ruangan" bodyClass="p-4" :headerClass="`${tempStatus.headerBg} border-slate-200`">
           <div class="flex flex-col items-center justify-center py-2 min-h-[120px]">
             <p class="font-extrabold mb-1" :class="[apiError || currentRoom.temp.current === null ? 'text-2xl italic' : 'text-4xl', tempStatus.textClass]">
               {{ apiError ? 'Offline' : (currentRoom.temp.current !== null ? currentRoom.temp.current : 'No Data') }}
@@ -71,7 +71,7 @@
         </Card>
 
         <!-- ================= KARTU HUMIDITY ================= -->
-        <Card title="Humidity Ruangan" bodyClass="p-4">
+        <Card title="Humidity Ruangan" bodyClass="p-4" :headerClass="`${humStatus.headerBg} border-slate-200`">
           <div class="flex flex-col items-center justify-center py-2 min-h-[120px]">
             <p class="font-extrabold mb-1" :class="[apiError || currentRoom.humidity.current === null ? 'text-2xl italic' : 'text-4xl', humStatus.textClass]">
               {{ apiError ? 'Offline' : (currentRoom.humidity.current !== null ? currentRoom.humidity.current : 'No Data') }}
@@ -104,7 +104,7 @@
         </Card>
 
         <!-- ================= KARTU GAS ================= -->
-        <Card :title="`${gasLabel} Ruangan`" bodyClass="p-4">
+        <Card :title="`${gasLabel} Ruangan`" bodyClass="p-4" :headerClass="`${gasStatus.headerBg} border-slate-200`">
           <div class="flex flex-col items-center justify-center py-2 min-h-[120px]">
             <p class="font-extrabold mb-1" :class="[apiError || currentRoom.gas.current === null ? 'text-2xl italic' : 'text-4xl', gasStatus.textClass]">
               {{ apiError ? 'Offline' : (currentRoom.gas.current !== null ? currentRoom.gas.current : 'No Data') }}
@@ -255,29 +255,29 @@ const THRESHOLDS = {
 
 // --- LOGIKA STATUS WARNA (CORE LOGIC) ---
 const getTempStatus = (v) => {
-  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-400', badgeBg: 'bg-slate-200', badgeText: 'text-slate-500', badgeBorder: 'border-slate-300' }
-  if (v === null || v === undefined) return { label: 'NO DATA', textClass: 'text-slate-400', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200' }
-  if (v < THRESHOLDS.temp.dingin) return { label: 'DINGIN', textClass: 'text-blue-600', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200' }
-  if (v > THRESHOLDS.temp.panas) return { label: 'PANAS', textClass: 'text-red-600', badgeBg: 'bg-red-100', badgeText: 'text-red-700', badgeBorder: 'border-red-200' }
-  return { label: 'NORMAL', textClass: 'text-emerald-600', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200' }
+  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-400', badgeBg: 'bg-slate-200', badgeText: 'text-slate-500', badgeBorder: 'border-slate-300', headerBg: 'bg-slate-100' }
+  if (v === null || v === undefined) return { label: 'NO DATA', textClass: 'text-slate-400', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200', headerBg: 'bg-slate-50' }
+  if (v < THRESHOLDS.temp.dingin) return { label: 'DINGIN', textClass: 'text-blue-600', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200', headerBg: 'bg-blue-100' }
+  if (v > THRESHOLDS.temp.panas) return { label: 'PANAS', textClass: 'text-red-600', badgeBg: 'bg-red-100', badgeText: 'text-red-700', badgeBorder: 'border-red-200', headerBg: 'bg-red-200' }
+  return { label: 'NORMAL', textClass: 'text-emerald-600', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200', headerBg: 'bg-emerald-100' }
 }
 
 const getHumidityStatus = (v) => {
-  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-400', badgeBg: 'bg-slate-200', badgeText: 'text-slate-500', badgeBorder: 'border-slate-300' }
-  if (v === null || v === undefined) return { label: 'NO DATA', textClass: 'text-slate-400', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200' }
-  if (v < THRESHOLDS.humidity.kering) return { label: 'KERING', textClass: 'text-amber-500', badgeBg: 'bg-amber-100', badgeText: 'text-amber-700', badgeBorder: 'border-amber-200' }
-  if (v > THRESHOLDS.humidity.lembab) return { label: 'LEMBAB', textClass: 'text-blue-600', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200' }
-  return { label: 'NORMAL', textClass: 'text-emerald-600', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200' }
+  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-400', badgeBg: 'bg-slate-200', badgeText: 'text-slate-500', badgeBorder: 'border-slate-300', headerBg: 'bg-slate-100' }
+  if (v === null || v === undefined) return { label: 'NO DATA', textClass: 'text-slate-400', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200', headerBg: 'bg-slate-50' }
+  if (v < THRESHOLDS.humidity.kering) return { label: 'KERING', textClass: 'text-amber-500', badgeBg: 'bg-amber-100', badgeText: 'text-amber-700', badgeBorder: 'border-amber-200', headerBg: 'bg-amber-100' }
+  if (v > THRESHOLDS.humidity.lembab) return { label: 'LEMBAB', textClass: 'text-blue-600', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200', headerBg: 'bg-blue-100' }
+  return { label: 'NORMAL', textClass: 'text-emerald-600', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200', headerBg: 'bg-emerald-100' }
 }
 
 const getGasStatus = (v, type) => {
-  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-400', badgeBg: 'bg-slate-200', badgeText: 'text-slate-500', badgeBorder: 'border-slate-300' }
-  if (v === null || v === undefined) return { label: 'NO DATA', textClass: 'text-slate-400', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200' }
+  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-400', badgeBg: 'bg-slate-200', badgeText: 'text-slate-500', badgeBorder: 'border-slate-300', headerBg: 'bg-slate-100' }
+  if (v === null || v === undefined) return { label: 'NO DATA', textClass: 'text-slate-400', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200', headerBg: 'bg-slate-50' }
   
   const limits = type === 'CO2' ? THRESHOLDS.co2 : THRESHOLDS.hydrogen
-  if (v < limits.rendah) return { label: 'RENDAH', textClass: 'text-sky-600', badgeBg: 'bg-sky-100', badgeText: 'text-sky-700', badgeBorder: 'border-sky-200' }
-  if (v > limits.tinggi) return { label: 'TINGGI / BAHAYA', textClass: 'text-red-600', badgeBg: 'bg-red-100', badgeText: 'text-red-700', badgeBorder: 'border-red-200' }
-  return { label: 'NORMAL', textClass: 'text-emerald-600', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200' }
+  if (v < limits.rendah) return { label: 'RENDAH', textClass: 'text-sky-600', badgeBg: 'bg-sky-100', badgeText: 'text-sky-700', badgeBorder: 'border-sky-200', headerBg: 'bg-sky-100' }
+  if (v > limits.tinggi) return { label: 'TINGGI / BAHAYA', textClass: 'text-red-600', badgeBg: 'bg-red-100', badgeText: 'text-red-700', badgeBorder: 'border-red-200', headerBg: 'bg-red-200' }
+  return { label: 'NORMAL', textClass: 'text-emerald-600', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200', headerBg: 'bg-emerald-100' }
 }
 
 // --- INISIALISASI STRUKTUR DATA BAWAAN (FALLBACK DENGAN NULL) ---

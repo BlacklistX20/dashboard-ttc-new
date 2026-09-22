@@ -82,7 +82,7 @@
         >
           <div class="flex items-center gap-4">
             <SlidersHorizontal class="w-6 h-6 flex-shrink-0" />
-            <span class="font-medium transition-opacity duration-300" :class="isHovered ? 'opacity-100' : 'opacity-0'">Sistem Kontrol</span>
+            <span class="font-medium transition-opacity duration-300" :class="isHovered ? 'opacity-100' : 'opacity-0'">Sistem Kontrol IOT</span>
           </div>
           <ChevronDown v-show="isHovered" class="w-4 h-4 transition-transform duration-300" :class="isKontrolOpen ? 'rotate-180' : ''" />
         </button>

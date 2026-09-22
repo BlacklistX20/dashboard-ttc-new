@@ -43,13 +43,15 @@
         :key="index" 
         :title="room.name"
         bodyClass="p-4"
-        class="border-t-4 transition-all relative"
-        :class="[getTempStatus(room.avgTemp).borderClass, getTempStatus(room.avgTemp).cardBg]"
+        class="transition-all relative"
+        :headerClass="`${getTempStatus(room.avgTemp).headerBg} border-slate-200`"
+        :footerClass="`${getTempStatus(room.avgTemp).headerBg} border-slate-200`"
       >
         <!-- BADGE: Muncul jika koneksi ke modul suhu ruangan ini terputus (status != 'C') -->
+        <!-- Diberi ring putih & shadow lebih tegas supaya tetap kontras di atas header yang kini berwarna -->
         <div 
           v-if="!room.isConnected"
-          class="absolute top-2 right-2 flex items-center gap-1 bg-red-600 text-white text-[9px] font-bold px-2 py-1 rounded-full shadow z-10"
+          class="absolute top-2 right-2 flex items-center gap-1 bg-red-600 text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-md ring-2 ring-white z-10"
         >
           <WifiOff class="w-3 h-3" />
           <span>TERPUTUS</span>
@@ -125,7 +127,7 @@
               v-for="(sensor, idx) in selectedRoom.sensors" 
               :key="idx"
               class="flex justify-between items-center p-3 rounded-xl border-l-4"
-              :class="[getTempStatus(sensor.temp).cardBg, getTempStatus(sensor.temp).borderClass]"
+              :class="[getTempStatus(sensor.temp).rowBg, getTempStatus(sensor.temp).rowBorder]"
             >
               <div class="flex items-center gap-3">
                 <Thermometer class="w-5 h-5" :class="getTempStatus(sensor.temp).textClass" />
@@ -205,17 +207,17 @@ const notifRef = ref(null)
 // --- LOGIKA STATUS WARNA (CORE LOGIC) ---
 const getTempStatus = (temp) => {
   if (apiError.value) {
-    return { label: 'OFFLINE', textClass: 'text-slate-400', borderClass: 'border-t-slate-400', cardBg: 'bg-slate-50/50 border-slate-200', badgeBg: 'bg-slate-200', badgeText: 'text-slate-600', badgeBorder: 'border-slate-300', btnClass: 'bg-slate-400 hover:bg-slate-500' }
+    return { label: 'OFFLINE', textClass: 'text-slate-400', headerBg: 'bg-slate-100', rowBg: 'bg-slate-50/50', rowBorder: 'border-l-slate-400', badgeBg: 'bg-slate-200', badgeText: 'text-slate-600', badgeBorder: 'border-slate-300', btnClass: 'bg-slate-400 hover:bg-slate-500' }
   } else if (temp === null) {
-    return { label: 'NO DATA', textClass: 'text-slate-400', borderClass: 'border-t-slate-300', cardBg: 'bg-slate-50/50 border-slate-200', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200', btnClass: 'bg-slate-400 hover:bg-slate-500' }
+    return { label: 'NO DATA', textClass: 'text-slate-400', headerBg: 'bg-slate-50', rowBg: 'bg-slate-50/50', rowBorder: 'border-l-slate-300', badgeBg: 'bg-slate-100', badgeText: 'text-slate-500', badgeBorder: 'border-slate-200', btnClass: 'bg-slate-400 hover:bg-slate-500' }
   } else if (temp <= 18) {
-    return { label: 'DINGIN', textClass: 'text-blue-600', borderClass: 'border-t-blue-500', cardBg: 'bg-blue-50/30 border-blue-100', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200', btnClass: 'bg-blue-600 hover:bg-blue-700' }
+    return { label: 'DINGIN', textClass: 'text-blue-600', headerBg: 'bg-blue-100', rowBg: 'bg-blue-50/30', rowBorder: 'border-l-blue-500', badgeBg: 'bg-blue-100', badgeText: 'text-blue-700', badgeBorder: 'border-blue-200', btnClass: 'bg-blue-600 hover:bg-blue-700' }
   } else if (temp > 18 && temp <= 24) {
-    return { label: 'NORMAL', textClass: 'text-emerald-600', borderClass: 'border-t-emerald-500', cardBg: 'bg-emerald-50/30 border-emerald-100', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200', btnClass: 'bg-emerald-600 hover:bg-emerald-700' }
+    return { label: 'NORMAL', textClass: 'text-emerald-600', headerBg: 'bg-emerald-100', rowBg: 'bg-emerald-50/30', rowBorder: 'border-l-emerald-500', badgeBg: 'bg-emerald-100', badgeText: 'text-emerald-700', badgeBorder: 'border-emerald-200', btnClass: 'bg-emerald-600 hover:bg-emerald-700' }
   } else if (temp > 24 && temp <= 29) {
-    return { label: 'HANGAT', textClass: 'text-amber-500', borderClass: 'border-t-amber-400', cardBg: 'bg-amber-50/30 border-amber-100', badgeBg: 'bg-amber-100', badgeText: 'text-amber-700', badgeBorder: 'border-amber-200', btnClass: 'bg-amber-500 hover:bg-amber-600' }
+    return { label: 'HANGAT', textClass: 'text-amber-500', headerBg: 'bg-amber-100', rowBg: 'bg-amber-50/30', rowBorder: 'border-l-amber-400', badgeBg: 'bg-amber-100', badgeText: 'text-amber-700', badgeBorder: 'border-amber-200', btnClass: 'bg-amber-500 hover:bg-amber-600' }
   } else {
-    return { label: 'PANAS / BAHAYA', textClass: 'text-red-600', borderClass: 'border-t-red-500', cardBg: 'bg-red-50/30 border-red-100', badgeBg: 'bg-red-100', badgeText: 'text-red-700', badgeBorder: 'border-red-200', btnClass: 'bg-red-600 hover:bg-red-700' }
+    return { label: 'PANAS / BAHAYA', textClass: 'text-red-600', headerBg: 'bg-red-200', rowBg: 'bg-red-50/30', rowBorder: 'border-l-red-500', badgeBg: 'bg-red-100', badgeText: 'text-red-700', badgeBorder: 'border-red-200', btnClass: 'bg-red-600 hover:bg-red-700' }
   }
 }
 

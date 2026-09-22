@@ -117,7 +117,7 @@
               <div v-if="co2Data.length">
                 <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Gas CO2</h3>
                 <div class="flex flex-col gap-2">
-                  <div v-for="(room, index) in co2Data" :key="index" class="px-3 py-2 rounded-xl border flex justify-between items-center shadow-sm border-l-4 transition-colors" :class="[getCO2Status(room.value).boxBg, getCO2Status(room.value).borderClass]">
+                  <div v-for="(room, index) in co2Data" :key="index" class="px-3 py-2 rounded-xl border flex justify-between items-center shadow-sm border-l-4 transition-colors" :class="[getCO2Status(room.value).boxBg, getCO2Status(room.value).borderClass, getCO2Status(room.value).blink ? 'blink-danger' : '']">
                     <div>
                       <span class="text-xs text-slate-800 font-bold block mb-1">{{ room.name }}</span>
                       <span class="text-[9px] font-bold px-2 py-0.5 rounded-full" :class="[getCO2Status(room.value).badgeBg, getCO2Status(room.value).textClass]">{{ getCO2Status(room.value).label }}</span>
@@ -141,7 +141,7 @@
               <div v-if="h2Data.length">
                 <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-2">Gas Hidrogen (H2)</h3>
                 <div class="flex flex-col gap-2">
-                  <div v-for="(room, index) in h2Data" :key="index" class="px-3 py-2 rounded-xl border flex justify-between items-center shadow-sm border-l-4 transition-colors" :class="[getH2Status(room.value).boxBg, getH2Status(room.value).borderClass]">
+                  <div v-for="(room, index) in h2Data" :key="index" class="px-3 py-2 rounded-xl border flex justify-between items-center shadow-sm border-l-4 transition-colors" :class="[getH2Status(room.value).boxBg, getH2Status(room.value).borderClass, getH2Status(room.value).blink ? 'blink-danger' : '']">
                     <div>
                       <span class="text-xs text-slate-800 font-bold block mb-1">{{ room.name }}</span>
                       <span class="text-[9px] font-bold px-2 py-0.5 rounded-full" :class="[getH2Status(room.value).badgeBg, getH2Status(room.value).textClass]">{{ getH2Status(room.value).label }}</span>
@@ -165,7 +165,7 @@
               <div v-if="coGensetData.length">
                 <h3 class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-2">Gas Carbon (CO)</h3>
                 <div class="flex flex-col gap-2">
-                  <div v-for="(genset, index) in coGensetData" :key="index" class="px-3 py-2 rounded-xl border flex justify-between items-center shadow-sm border-l-4 transition-colors" :class="[getCOStatus(genset.value).boxBg, getCOStatus(genset.value).borderClass]">
+                  <div v-for="(genset, index) in coGensetData" :key="index" class="px-3 py-2 rounded-xl border flex justify-between items-center shadow-sm border-l-4 transition-colors" :class="[getCOStatus(genset.value).boxBg, getCOStatus(genset.value).borderClass, getCOStatus(genset.value).blink ? 'blink-danger' : '']">
                     <div>
                       <span class="text-xs text-slate-800 font-bold block mb-1">{{ genset.name }}</span>
                       <span class="text-[9px] font-bold px-2 py-0.5 rounded-full" :class="[getCOStatus(genset.value).badgeBg, getCOStatus(genset.value).textClass]">{{ getCOStatus(genset.value).label }}</span>
@@ -342,27 +342,27 @@ onUnmounted(() => {
 
 // --- LOGIKA STATUS WARNA GAS ---
 const getCO2Status = (value) => {
-  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200' }
-  if (value === null || value === undefined) return { label: 'NO DATA', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200' }
-  if (value < 1000) return { label: 'AMAN', textClass: 'text-emerald-900', badgeBg: 'bg-emerald-500/60', boxBg: 'bg-emerald-200', borderClass: 'border-l-emerald-500 border-emerald-200' }
-  else if (value <= 2000) return { label: 'PERINGATAN', textClass: 'text-amber-900', badgeBg: 'bg-amber-500/60', boxBg: 'bg-amber-200', borderClass: 'border-l-amber-400 border-amber-200' }
-  else return { label: 'BAHAYA', textClass: 'text-red-900', badgeBg: 'bg-red-500/60', boxBg: 'bg-red-200', borderClass: 'border-l-red-500 border-red-200' }
+  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200', blink: false }
+  if (value === null || value === undefined) return { label: 'NO DATA', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200', blink: false }
+  if (value < 1000) return { label: 'AMAN', textClass: 'text-emerald-900', badgeBg: 'bg-emerald-500/60', boxBg: 'bg-emerald-200', borderClass: 'border-l-emerald-500 border-emerald-200', blink: false }
+  else if (value <= 2000) return { label: 'PERINGATAN', textClass: 'text-amber-900', badgeBg: 'bg-amber-500/60', boxBg: 'bg-amber-200', borderClass: 'border-l-amber-400 border-amber-200', blink: false }
+  else return { label: 'BAHAYA', textClass: 'text-red-900', badgeBg: 'bg-red-500/60', boxBg: 'bg-red-200', borderClass: 'border-l-red-500 border-red-200', blink: true }
 }
 
 const getH2Status = (value) => {
-  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200' }
-  if (value === null || value === undefined) return { label: 'NO DATA', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200' }
-  if (value < 0.5) return { label: 'AMAN', textClass: 'text-emerald-900', badgeBg: 'bg-emerald-500/60', boxBg: 'bg-emerald-200', borderClass: 'border-l-emerald-500 border-emerald-200' }
-  else if (value <= 1.0) return { label: 'PERINGATAN', textClass: 'text-amber-900', badgeBg: 'bg-amber-500/60', boxBg: 'bg-amber-200', borderClass: 'border-l-amber-400 border-amber-200' }
-  else return { label: 'BAHAYA', textClass: 'text-red-900', badgeBg: 'bg-red-500/60', boxBg: 'bg-red-200', borderClass: 'border-l-red-500 border-red-200' }
+  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200', blink: false }
+  if (value === null || value === undefined) return { label: 'NO DATA', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200', blink: false }
+  if (value < 0.5) return { label: 'AMAN', textClass: 'text-emerald-900', badgeBg: 'bg-emerald-500/60', boxBg: 'bg-emerald-200', borderClass: 'border-l-emerald-500 border-emerald-200', blink: false }
+  else if (value <= 1.0) return { label: 'PERINGATAN', textClass: 'text-amber-900', badgeBg: 'bg-amber-500/60', boxBg: 'bg-amber-200', borderClass: 'border-l-amber-400 border-amber-200', blink: false }
+  else return { label: 'BAHAYA', textClass: 'text-red-900', badgeBg: 'bg-red-500/60', boxBg: 'bg-red-200', borderClass: 'border-l-red-500 border-red-200', blink: true }
 }
 
 const getCOStatus = (value) => {
-  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200' }
-  if (value === null || value === undefined) return { label: 'NO DATA', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200' }
-  if (value < 25) return { label: 'AMAN', textClass: 'text-emerald-900', badgeBg: 'bg-emerald-500/60', boxBg: 'bg-emerald-200', borderClass: 'border-l-emerald-500 border-emerald-200' }
-  else if (value <= 50) return { label: 'PERINGATAN', textClass: 'text-amber-900', badgeBg: 'bg-amber-500/60', boxBg: 'bg-amber-200', borderClass: 'border-l-amber-400 border-amber-200' }
-  else return { label: 'BAHAYA', textClass: 'text-red-900', badgeBg: 'bg-red-500/60', boxBg: 'bg-red-200', borderClass: 'border-l-red-500 border-red-200' }
+  if (apiError.value) return { label: 'OFFLINE', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200', blink: false }
+  if (value === null || value === undefined) return { label: 'NO DATA', textClass: 'text-slate-500', badgeBg: 'bg-slate-200', boxBg: 'bg-slate-50', borderClass: 'border-l-slate-400 border-slate-200', blink: false }
+  if (value < 25) return { label: 'AMAN', textClass: 'text-emerald-900', badgeBg: 'bg-emerald-500/60', boxBg: 'bg-emerald-200', borderClass: 'border-l-emerald-500 border-emerald-200', blink: false }
+  else if (value <= 50) return { label: 'PERINGATAN', textClass: 'text-amber-900', badgeBg: 'bg-amber-500/60', boxBg: 'bg-amber-200', borderClass: 'border-l-amber-400 border-amber-200', blink: false }
+  else return { label: 'BAHAYA', textClass: 'text-red-900', badgeBg: 'bg-red-500/60', boxBg: 'bg-red-200', borderClass: 'border-l-red-500 border-red-200', blink: true }
 }
 
 // --- KONFIGURASI GRAFIK APEXCHARTS ---
@@ -408,4 +408,11 @@ const bbmBulananOptions = ref({
 @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 .animate-zoom-in { animation: zoomIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 @keyframes zoomIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+/* Kedip merah untuk kartu gas yang berstatus BAHAYA */
+.blink-danger { animation: blinkDanger 1s ease-in-out infinite; }
+@keyframes blinkDanger {
+  0%, 100% { background-color: rgb(254 202 202); border-color: rgb(220 38 38); box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.5); }
+  50% { background-color: rgb(252 165 165); border-color: rgb(153 27 27); box-shadow: 0 0 10px 2px rgba(220, 38, 38, 0.6); }
+}
 </style>
