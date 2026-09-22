@@ -14,6 +14,25 @@ client.on('connect', () => {
   client.subscribe('ttcsudiang/pac/status'); 
 });
 
+// PENTING: 'error' WAJIB ditangani. Tanpa listener ini, event error dari
+// MQTT client (mis. broker unreachable, auth gagal) akan jadi unhandled
+// exception dan bisa mematikan seluruh proses Node.js.
+client.on('error', (err) => {
+  console.error('❌ MQTT Client Error:', err.message);
+});
+
+client.on('close', () => {
+  console.warn('⚠️  Koneksi MQTT Broker terputus (close)');
+});
+
+client.on('offline', () => {
+  console.warn('⚠️  MQTT Client offline (broker tidak terjangkau)');
+});
+
+client.on('reconnect', () => {
+  console.log('🔄 Mencoba menyambung ulang ke MQTT Broker...');
+});
+
 // Menerima update status ON/OFF PAC langsung dari hardware via MQTT
 client.on('message', async (topic, message) => {
   if (topic === 'ttcsudiang/pac/status') {
@@ -86,7 +105,7 @@ exports.getPacData = async (req, res) => {
       }
     ];
 
-    res.status(200).json({ success: true, settings, rooms });
+    res.status(200).json({ success: true, mqttConnected: client.connected, settings, rooms });
   } catch (error) {
     console.error('Error getPacData:', error);
     res.status(500).json({ success: false, message: 'Gagal mengambil data PAC' });
@@ -98,7 +117,8 @@ exports.saveParameters = async (req, res) => {
   try {
     const data = req.body;
     
-    // 1. Simpan ke database
+    // 1. Simpan ke database (tetap disimpan meski MQTT sedang terputus,
+    // supaya parameter tidak hilang dan otomatis ikut kekirim saat broker reconnect)
     await PacSetting.update({
       temp_mode: data.tempModeActive ? 1 : 0,
       temp_min: data.tempMin,
@@ -108,20 +128,33 @@ exports.saveParameters = async (req, res) => {
       time_off: data.timeOff
     }, { where: { id: 1 } });
 
-    // 2. Publish ke MQTT
+    // 2. Cek status koneksi MQTT SEBELUM klaim sukses ke user
+    const isMqttConnected = client.connected;
+
+    // Publish tetap dipanggil - kalau broker sedang terputus, mqtt.js akan
+    // meng-antre pesan ini dan mengirimnya otomatis begitu tersambung lagi.
     const payload = JSON.stringify(data);
     client.publish('ttcsudiang/pac/settings', payload, { qos: 1 });
 
-    // 3. Catat di Log
+    // 3. Catat di Log - status log mengikuti kondisi koneksi yang sebenarnya
     await ControlLog.create({
       device_code: 'SYS_PAC',
       action: 'UPDATE_PARAMS',
-      status: 'SUCCESS',
-      message: `Parameter diubah: Temp(${data.tempMin}-${data.tempMax}), Time(${data.timeOn}-${data.timeOff})`
+      status: isMqttConnected ? 'SUCCESS' : 'WARNING',
+      message: isMqttConnected
+        ? `Parameter diubah: Temp(${data.tempMin}-${data.tempMax}), Time(${data.timeOn}-${data.timeOff})`
+        : `Parameter disimpan ke database, tapi MQTT Broker sedang TERPUTUS saat publish - pesan di-queue, belum pasti sampai ke perangkat: Temp(${data.tempMin}-${data.tempMax}), Time(${data.timeOn}-${data.timeOff})`
     });
 
-    res.status(200).json({ success: true, message: 'Parameter berhasil disinkronkan ke MQTT' });
+    if (isMqttConnected) {
+      res.status(200).json({ success: true, mqttConnected: true, message: 'Parameter berhasil disinkronkan ke MQTT' });
+    } else {
+      // success: true karena data tetap tersimpan di database, tapi mqttConnected: false
+      // memberi tahu frontend bahwa publish ke perangkat BELUM tentu terkirim
+      res.status(200).json({ success: true, mqttConnected: false, message: 'Parameter tersimpan, tapi MQTT Broker sedang terputus - belum tentu tersinkron ke perangkat' });
+    }
   } catch (error) {
+    console.error('Error saveParameters:', error);
     res.status(500).json({ success: false, message: 'Gagal menyimpan parameter' });
   }
 };

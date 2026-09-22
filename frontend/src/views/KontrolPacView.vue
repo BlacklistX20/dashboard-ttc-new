@@ -4,9 +4,21 @@
     <ConnectionNotif ref="notifRef" />
 
     <!-- HEADER -->
-    <div class="mb-2">
-      <h1 class="text-xl font-bold text-slate-800 mb-1">Sistem Kontrol PAC</h1>
-      <p class="text-slate-500 text-xs">Pemantauan dan pengaturan parameter otomatisasi Precision Air Conditioning via MQTT.</p>
+    <div class="mb-2 flex items-center justify-between flex-wrap gap-2">
+      <div>
+        <h1 class="text-xl font-bold text-slate-800 mb-1">Sistem Kontrol PAC</h1>
+        <p class="text-slate-500 text-xs">Pemantauan dan pengaturan parameter otomatisasi Precision Air Conditioning via MQTT.</p>
+      </div>
+
+      <!-- Badge status koneksi ke MQTT Broker -->
+      <div 
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border shadow-sm text-[11px] font-bold"
+        :class="apiError ? 'bg-slate-100 border-slate-200 text-slate-500' : (mqttConnected ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700')"
+      >
+        <Wifi v-if="!apiError && mqttConnected" class="w-3.5 h-3.5" />
+        <WifiOff v-else class="w-3.5 h-3.5" />
+        <span>MQTT Broker: {{ apiError ? 'Tidak diketahui' : (mqttConnected ? 'Tersambung' : 'Terputus') }}</span>
+      </div>
     </div>
 
     <div class="flex flex-col gap-2 animate-fade-in">
@@ -155,13 +167,14 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import Card from '@/components/Card.vue'
 import ConnectionNotif from '@/components/ConnectionNotif.vue'
-import { Fan, Thermometer, Clock, Save, Loader2 } from '@lucide/vue'
+import { Fan, Thermometer, Clock, Save, Loader2, Wifi, WifiOff } from '@lucide/vue'
 import api from '@/services/api'
 
 // --- STATE SISTEM & NOTIFIKASI ---
 const apiError = ref(false)
 const notifRef = ref(null)
 const isSaving = ref(false)
+const mqttConnected = ref(false)
 
 // --- DATA STATUS RUANGAN (Fallback null) ---
 const rooms = ref([
@@ -198,6 +211,7 @@ const fetchPacData = async () => {
     }
     
     rooms.value = res.data.rooms
+    mqttConnected.value = res.data.mqttConnected === true
     
     // Update setting form UI
     const s = res.data.settings
@@ -215,6 +229,7 @@ const fetchPacData = async () => {
       notifRef.value?.showError('Koneksi Terputus!', 'Gagal memuat status PAC. Menampilkan status offline...')
     }
     // Set fallback offline
+    mqttConnected.value = false
     rooms.value.forEach(room => {
       room.sensors.forEach(s => s.temp = null)
       room.pacs.forEach(p => p.isOn = false)
@@ -232,8 +247,14 @@ const saveParameters = async () => {
   }
   
   try {
-    await api.post('/pac/settings', payload)
-    notifRef.value?.showSuccess('Berhasil', 'Parameter berhasil dipublish ke Controller via MQTT')
+    const res = await api.post('/pac/settings', payload)
+    mqttConnected.value = res.data.mqttConnected === true
+
+    if (res.data.mqttConnected) {
+      notifRef.value?.showSuccess('Berhasil', 'Parameter berhasil dipublish ke Controller via MQTT')
+    } else {
+      notifRef.value?.showError('Tersimpan, Belum Tersinkron', 'Parameter tersimpan di database, tapi MQTT Broker sedang terputus - belum tentu sampai ke perangkat')
+    }
   } catch (error) {
     notifRef.value?.showError('Gagal', 'Server gagal meneruskan parameter ke MQTT Broker')
   } finally {
