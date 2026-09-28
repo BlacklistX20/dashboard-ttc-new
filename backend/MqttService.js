@@ -10,7 +10,7 @@ const MQTT_BROKER = process.env.MQTT_BROKER || 'mqtt://192.168.10.10:1883';
 const client = mqtt.connect(MQTT_BROKER);
 
 // Fungsi untuk mengambil suhu terbaru dan mem-publish ke MQTT
-publishRealtimeBatteryTemps = async () => {
+const publishRealtimeBatteryTemps = async () => {
   try {
     if (!client.connected) {
       console.log('MQTT belum terhubung, publish dibatalkan.');
@@ -44,7 +44,7 @@ publishRealtimeBatteryTemps = async () => {
     if (payloadBat3) client.publish('ttcsudiang/sensor/battery3', payloadBat3, { retain: true });
     if (payloadBat4) client.publish('ttcsudiang/sensor/battery4', payloadBat4, { retain: true });
 
-    // console.log('Data suhu baterai berhasil di-publish ke MQTT');
+    console.log('Data suhu baterai berhasil di-publish ke MQTT');
   } catch (error) {
     console.error('Gagal publish suhu baterai ke MQTT:', error);
   }

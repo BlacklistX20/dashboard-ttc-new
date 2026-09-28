@@ -12,6 +12,16 @@ services:
     volumes:
       - ./backend/public/uploads:/app/public/uploads
 
+  mqtt_worker:
+    build: ./backend
+    container_name: ttc_mqtt_worker
+    restart: always
+    command: ["node", "MqttService.js"]
+    env_file:
+      - ./backend/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   frontend:
     build: ./frontend
     container_name: ttc_frontend
