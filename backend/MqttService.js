@@ -50,8 +50,24 @@ const publishRealtimeBatteryTemps = async () => {
   }
 };
 
-// PANGGIL FUNGSI INI SECARA BERKALA
-// Anda bisa menggunakan setInterval untuk mem-publish setiap sekian detik/menit
+// --- FUNGSI BARU: PUBLISH WAKTU SERVER LOKAL ---
+const publishServerTime = () => {
+  if (client.connected) {
+    const now = new Date();
+    // Format menjadi HH:MM berdasarkan waktu lokal server
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const currentTime = `${hours}:${minutes}`;
+    
+    // Publish sebagai plain text dengan retain = true agar ESP32 langsung mendapatkan waktu saat terhubung
+    client.publish('ttcsudiang/time', currentTime, { retain: true });
+    // console.log(`Waktu tersinkronisasi ke MQTT: ${currentTime}`);
+  }
+};
+
+// PANGGIL FUNGSI SECARA BERKALA
+// Publish suhu baterai dan sinkronisasi waktu setiap 30 detik
 setInterval(() => {
   publishRealtimeBatteryTemps();
-}, 60000); // Publish setiap 5 detik (Sesuaikan dengan frekuensi update database Anda)
+  publishServerTime();
+}, 30000);
