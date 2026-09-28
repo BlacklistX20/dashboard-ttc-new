@@ -54,4 +54,4 @@ publishRealtimeBatteryTemps = async () => {
 // Anda bisa menggunakan setInterval untuk mem-publish setiap sekian detik/menit
 setInterval(() => {
   publishRealtimeBatteryTemps();
-}, 5000); // Publish setiap 5 detik (Sesuaikan dengan frekuensi update database Anda)
+}, 60000); // Publish setiap 5 detik (Sesuaikan dengan frekuensi update database Anda)
