@@ -1,8 +1,9 @@
 const axios = require('axios');
 const { DeviceState, ControlLog } = require('../models/ControlModel'); // Memanggil ControlModel.js sesuai permintaan
 
-// Konfigurasi IP Arduino (Bisa dipindahkan ke .env nantinya)
-const ARDUINO_IP = 'http://192.168.10.177';
+// Konfigurasi IP Arduino - via environment variable supaya bisa beda per environment
+// (dev/staging/prod, atau saat pindah ke Docker) tanpa perlu rebuild kode.
+const ARDUINO_IP = process.env.ARDUINO_IP || 'http://192.168.10.177';
 
 // ========================================================================
 // FUNGSI KOMUNIKASI DEVICE (FUTURE-PROOF UNTUK MQTT)
@@ -56,7 +57,11 @@ exports.getStates = async (req, res) => {
 exports.toggleArduino = async (req, res) => {
   try {
     const { state } = req.body; // state: 1 (Connected) atau 0 (Disconnected)
-    
+
+    if (state !== 0 && state !== 1) {
+      return res.status(400).json({ success: false, message: 'Nilai state harus 0 atau 1' });
+    }
+
     await DeviceState.update({ state }, { where: { device_code: 'ARD1' } });
 
     // Jika diputus (0), matikan semua valve dan pompa di database demi keamanan
@@ -99,6 +104,13 @@ exports.toggleValve = async (req, res) => {
     const hwResponse = await sendToDevice(valveIndex, targetState);
 
     if (!hwResponse.success) {
+      // Request ke hardware benar-benar gagal (timeout/unreachable) - tandai Arduino
+      // terputus secara OTOMATIS di database, supaya badge status tidak terus
+      // menunjukkan CONNECTED padahal alat sudah tidak merespons. Matikan juga
+      // semua valve & pompa demi keamanan (pola yang sama dengan toggleArduino manual).
+      await DeviceState.update({ state: 0 }, { where: { device_code: 'ARD1' } });
+      await DeviceState.update({ state: 0 }, { where: { device_code: ['PMP1', 'VLV1', 'VLV2', 'VLV3'] } });
+
       // Catat kegagalan ke histori log
       await ControlLog.create({
         device_code: deviceCode,
@@ -109,22 +121,44 @@ exports.toggleValve = async (req, res) => {
       return res.status(503).json({ success: false, message: 'Arduino tidak merespons. Pastikan alat menyala.' });
     }
 
-    // 2. Jika sukses, update state valve di database
-    // Karena rule frontend: "Hanya 1 valve terbuka", matikan valve lain jika state=1
-    if (targetState === 1) {
-      await DeviceState.update({ state: 0 }, { where: { device_code: ['VLV1', 'VLV2', 'VLV3'] } });
-    }
-    
-    // Update valve yang dituju
-    await DeviceState.update({ state: targetState }, { where: { device_code: deviceCode } });
+    // 2. Jika sukses, update state valve di database.
+    // Dibungkus 1 transaction supaya "matikan valve lain -> set valve tujuan -> hitung &
+    // set pompa" jadi atomic - mencegah state tidak konsisten kalau ada 2 request nyaris
+    // bersamaan (mis. dari 2 tab/klien berbeda).
+    const t = await DeviceState.sequelize.transaction();
+    let pumpState;
+    try {
+      // Karena rule frontend: "Hanya 1 valve terbuka", matikan valve lain jika state=1
+      if (targetState === 1) {
+        await DeviceState.update(
+          { state: 0 },
+          { where: { device_code: ['VLV1', 'VLV2', 'VLV3'] }, transaction: t }
+        );
+      }
 
-    // 3. Logika Pompa Otomatis (Cek apakah ada setidaknya 1 valve yang masih menyala)
-    const activeValves = await DeviceState.count({
-      where: { device_code: ['VLV1', 'VLV2', 'VLV3'], state: 1 }
-    });
-    
-    const pumpState = activeValves > 0 ? 1 : 0;
-    await DeviceState.update({ state: pumpState }, { where: { device_code: 'PMP1' } });
+      // Update valve yang dituju
+      await DeviceState.update(
+        { state: targetState },
+        { where: { device_code: deviceCode }, transaction: t }
+      );
+
+      // 3. Logika Pompa Otomatis (Cek apakah ada setidaknya 1 valve yang masih menyala)
+      const activeValves = await DeviceState.count({
+        where: { device_code: ['VLV1', 'VLV2', 'VLV3'], state: 1 },
+        transaction: t
+      });
+
+      pumpState = activeValves > 0 ? 1 : 0;
+      await DeviceState.update(
+        { state: pumpState },
+        { where: { device_code: 'PMP1' }, transaction: t }
+      );
+
+      await t.commit();
+    } catch (dbError) {
+      await t.rollback();
+      throw dbError;
+    }
 
     // 4. Catat Keberhasilan di Log
     await ControlLog.create({

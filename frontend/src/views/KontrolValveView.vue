@@ -37,16 +37,18 @@
             </div>
             
             <div 
-              class="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm cursor-pointer transition-colors"
-              :class="isArduinoConnected ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'"
-              @click="toggleArduino" 
-              title="Klik untuk mengubah status server"
+              class="flex items-center gap-2 px-3 py-1.5 rounded-full border shadow-sm transition-colors"
+              :class="[
+                apiError ? 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed' : (isArduinoConnected ? 'bg-emerald-50 border-emerald-200 text-emerald-700 cursor-pointer' : 'bg-red-50 border-red-200 text-red-700 cursor-pointer')
+              ]"
+              @click="!apiError && toggleArduino()" 
+              :title="apiError ? 'Status tidak diketahui - koneksi ke server terputus' : 'Klik untuk mengubah status server'"
             >
               <div class="relative flex h-2.5 w-2.5">
-                <span v-if="isArduinoConnected" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2.5 w-2.5" :class="isArduinoConnected ? 'bg-emerald-500' : 'bg-red-500'"></span>
+                <span v-if="!apiError && isArduinoConnected" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5" :class="apiError ? 'bg-slate-400' : (isArduinoConnected ? 'bg-emerald-500' : 'bg-red-500')"></span>
               </div>
-              <span class="text-[10px] font-bold">{{ isArduinoConnected ? 'CONNECTED' : 'DISCONNECTED' }}</span>
+              <span class="text-[10px] font-bold">{{ apiError ? 'TIDAK DIKETAHUI' : (isArduinoConnected ? 'CONNECTED' : 'DISCONNECTED') }}</span>
             </div>
           </div>
 
@@ -88,13 +90,13 @@
                 v-for="(valve, index) in valves" 
                 :key="index"
                 @click="toggleValve(index)"
-                :disabled="!isArduinoConnected || isLoading"
+                :disabled="!isArduinoConnected || isLoading || apiError"
                 class="relative flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all duration-200 overflow-hidden"
                 :class="[
                   valve.isOpen 
                     ? 'border-sky-500 bg-sky-50 text-sky-700 shadow-md transform scale-[1.02]' 
                     : 'border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50',
-                  (!isArduinoConnected || isLoading) ? 'opacity-50 cursor-not-allowed hover:border-slate-200 hover:bg-white' : 'cursor-pointer'
+                  (!isArduinoConnected || isLoading || apiError) ? 'opacity-50 cursor-not-allowed hover:border-slate-200 hover:bg-white' : 'cursor-pointer'
                 ]"
               >
                 <!-- Background efek air -->
@@ -133,6 +135,7 @@ import api from '@/services/api'
 
 // --- NOTIFIKASI ---
 const notifRef = ref(null)
+const apiError = ref(false)
 
 // --- STATE SISTEM ---
 const isLoading = ref(false)
@@ -162,9 +165,18 @@ const fetchStates = async () => {
       valves.value[0].isOpen = states['VLV1'] === 1
       valves.value[1].isOpen = states['VLV2'] === 1
       valves.value[2].isOpen = states['VLV3'] === 1
+
+      if (apiError.value) {
+        apiError.value = false
+        notifRef.value?.showSuccess('Tersambung', 'Sinkronisasi data kontrol berhasil kembali.')
+      }
     }
   } catch (error) {
     console.error("Gagal sinkronisasi data kontrol")
+    if (!apiError.value) {
+      apiError.value = true
+      notifRef.value?.showError('Koneksi Terputus!', 'Gagal memuat status kontrol. Data yang tampil mungkin sudah tidak akurat.')
+    }
   }
 }
 
