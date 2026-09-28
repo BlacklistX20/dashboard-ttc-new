@@ -196,8 +196,8 @@ const rooms = ref([
 ])
 
 // --- STATE PARAMETER ---
-const tempModeActive = ref(true)
-const timeModeActive = ref(false)
+const tempModeActive = ref(false)
+const timeModeActive = ref(true)
 const settings = ref({ tempMin: 18, tempMax: 24, timeOn: '08:00', timeOff: '17:00' })
 
 // --- FETCH DATA DARI API ---
@@ -278,7 +278,7 @@ onMounted(() => {
   timer = setInterval(() => {
     updateTime()
     fetchPacData()
-  }, 5000)
+  }, 60000)
 })
 
 onUnmounted(() => { if (timer) clearInterval(timer) })
