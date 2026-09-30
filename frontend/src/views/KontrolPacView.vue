@@ -56,16 +56,46 @@
                 v-for="(pac, pIdx) in room.pacs" 
                 :key="pIdx"
                 class="flex items-center gap-1 px-2 py-1.5 rounded-full border shadow-sm transition-colors"
-                :class="apiError ? 'bg-slate-100 border-slate-200 text-slate-400' : (pac.isOn ? 'bg-sky-50 border-sky-200 text-sky-700' : 'bg-slate-50 border-slate-200 text-slate-500')"
+                :class="isPacOffline(pac) ? 'bg-slate-100 border-slate-200 text-slate-400' : (pac.isOn ? 'bg-sky-50 border-sky-200 text-sky-700' : 'bg-slate-50 border-slate-200 text-slate-500')"
               >
-                <Fan class="w-4 h-4" :class="!apiError && pac.isOn ? 'animate-spin' : ''" />
-                <span class="text-[10px] font-bold">{{ pac.name }}: {{ apiError ? 'OFFLINE' : (pac.isOn ? 'ON' : 'OFF') }}</span>
+                <Fan class="w-4 h-4" :class="!isPacOffline(pac) && pac.isOn ? 'animate-spin' : ''" />
+                <span class="text-[10px] font-bold">{{ pac.name }}: {{ isPacOffline(pac) ? 'OFFLINE' : (pac.isOn ? 'ON' : 'OFF') }}</span>
               </div>
             </div>
           </div>
         </Card>
 
       </div>
+
+      <!-- Setting yang berlaku sekarang (teks, dari server; bukan bagian form) -->
+        <div class="mt-1 bg-emerald-50 border border-emerald-200 rounded-lg p-2.5">
+          <div class="flex justify-between items-center mb-1">
+            <p class="text-[11px] font-bold text-emerald-800">Setting yang berlaku sekarang</p>
+            <span v-if="activeSettingsAt" class="text-[9px] text-emerald-700">Diperbarui {{ activeSettingsAt }}</span>
+          </div>
+          <template v-if="activeSettings">
+            <p class="text-[11px] text-slate-700">
+              <b>Suhu : </b>
+              <span v-if="activeSettings.tempMode">aktif, PAC mati saat ≤ {{ activeSettings.tempMin }}°C dan menyala saat ≥ {{ activeSettings.tempMax }}°C</span>
+              <span v-else>nonaktif</span>
+            </p>
+            <p class="text-[11px] text-slate-700">
+              <b>Jadwal : </b>
+              <span v-if="activeSettings.timeMode">aktif, menyala {{ activeSettings.timeOn }} dan mati {{ activeSettings.timeOff }}</span>
+              <span v-else>nonaktif</span>
+            </p>
+            <p v-if="!activeSettings.tempMode && !activeSettings.timeMode" class="text-[11px] font-bold text-red-600">
+              Semua mode nonaktif: PAC dimatikan.
+            </p>
+          </template>
+          <p v-else class="text-[11px] text-slate-400">Belum ada data.</p>
+          <p v-if="apiError && activeSettings" class="text-[9px] text-amber-700 mt-1">Gagal memuat data terbaru, menampilkan data terakhir.</p>
+          <p class="text-[9px] text-slate-400 mt-1">Teks ini diperbarui tiap 60 detik dan setiap parameter baru disimpan. Isian form di atas tidak ikut berubah.</p>
+        </div>
+
+        <p v-if="!tempModeActive && !timeModeActive" class="mt-2 text-[11px] font-bold text-red-600">
+          Semua mode nonaktif: PAC akan dimatikan.
+        </p>
 
       <!-- ================= BARIS 2: KARTU PARAMETER OTOMATISASI ================= -->
       <Card title="Parameter Otomatisasi PAC" bodyClass="p-2" class="border-t-4 relative overflow-hidden">
@@ -100,12 +130,12 @@
               <div>
                 <label class="block text-xs font-bold text-slate-500 mb-1">Batas Bawah (°C)</label>
                 <input v-model="settings.tempMin" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
-                <p class="text-[9px] text-slate-400 mt-1">PAC mati jika suhu di bawah ini.</p>
+                <p class="text-[9px] text-slate-400 mt-1">PAC mati saat suhu mencapai atau di bawah ini.</p>
               </div>
               <div>
                 <label class="block text-xs font-bold text-slate-500 mb-1">Batas Atas (°C)</label>
                 <input v-model="settings.tempMax" type="number" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm font-bold text-slate-700 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500">
-                <p class="text-[9px] text-slate-400 mt-1">PAC menyala jika suhu melewati ini.</p>
+                <p class="text-[9px] text-slate-400 mt-1">PAC menyala saat suhu mencapai atau melewati ini.</p>
               </div>
             </div>
           </div>
@@ -152,6 +182,14 @@
           </button>
         </div>
 
+        <!-- Catatan aturan otomatisasi (sesuai logika firmware) -->
+        <div class="mt-3 text-[10px] text-slate-500 bg-slate-50 border border-slate-200 rounded-lg p-2 leading-relaxed">
+          <p>CATATAN</p>
+          <p>• Jika mode suhu dan jadwal aktif bersamaan, kondisi yang tercapai lebih dulu menentukan status PAC.</p>
+          <p>• Jeda minimum antar pergantian ON/OFF adalah 5 Menit (proteksi kompresor).</p>
+          <p>• Jika data sensor atau waktu tidak diterima selama 30 detik, kondisi mode terkait diabaikan.</p>
+        </div>
+
         <template #footer>
           <div class="flex justify-between items-center text-[10px] text-slate-400">
             <span>Last Update:</span><span class="font-medium text-slate-500">{{ lastUpdated }}</span>
@@ -196,9 +234,25 @@ const rooms = ref([
 ])
 
 // --- STATE PARAMETER ---
-const tempModeActive = ref(false)
-const timeModeActive = ref(true)
+const tempModeActive = ref(true)
+const timeModeActive = ref(false)
 const settings = ref({ tempMin: 18, tempMax: 24, timeOn: '08:00', timeOff: '17:00' })
+
+// Setting yang sedang berlaku (dari server). Hanya ini yang ikut di-refresh oleh polling;
+// form di atas hanya diisi SEKALI saat pertama kali data berhasil dimuat.
+const activeSettings = ref(null)
+const activeSettingsAt = ref('')
+let formInitialized = false
+
+const formatNow = () => {
+  const now = new Date()
+  const pad = (num) => num.toString().padStart(2, '0')
+  return `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+}
+
+// PAC dianggap offline jika API gagal, atau perangkat melaporkan offline (LWT/heartbeat).
+// pac.online === null berarti perangkat lama tanpa presence -> tampil seperti biasa.
+const isPacOffline = (pac) => apiError.value || pac.online === false
 
 // --- FETCH DATA DARI API ---
 const fetchPacData = async () => {
@@ -213,15 +267,30 @@ const fetchPacData = async () => {
     rooms.value = res.data.rooms
     mqttConnected.value = res.data.mqttConnected === true
     
-    // Update setting form UI
+    // Setting yang berlaku: selalu diperbarui dari server
     const s = res.data.settings
-    tempModeActive.value = s.temp_mode === 1
-    timeModeActive.value = s.time_mode === 1
-    settings.value = {
+    const active = {
+      tempMode: s.temp_mode === 1,
+      timeMode: s.time_mode === 1,
       tempMin: s.temp_min,
       tempMax: s.temp_max,
-      timeOn: s.time_on,
-      timeOff: s.time_off
+      timeOn: String(s.time_on || '08:00').slice(0, 5),
+      timeOff: String(s.time_off || '17:00').slice(0, 5)
+    }
+    activeSettings.value = active
+    activeSettingsAt.value = formatNow()
+
+    // Form hanya diisi sekali (pertama kali berhasil dimuat), selanjutnya tidak ditimpa
+    if (!formInitialized) {
+      tempModeActive.value = active.tempMode
+      timeModeActive.value = active.timeMode
+      settings.value = {
+        tempMin: active.tempMin,
+        tempMax: active.tempMax,
+        timeOn: active.timeOn,
+        timeOff: active.timeOff
+      }
+      formInitialized = true
     }
   } catch (error) {
     if (!apiError.value) {
@@ -238,17 +307,51 @@ const fetchPacData = async () => {
 }
 
 // --- FUNGSI SIMPAN KE API / MQTT ---
+const validateForm = () => {
+  const { tempMin, tempMax, timeOn, timeOff } = settings.value
+  if (tempMin === '' || tempMax === '' || isNaN(Number(tempMin)) || isNaN(Number(tempMax))) {
+    return 'Batas suhu harus berupa angka'
+  }
+  if (Number(tempMin) >= Number(tempMax)) {
+    return 'Batas bawah suhu harus lebih kecil dari batas atas'
+  }
+  if (!timeOn || !timeOff) {
+    return 'Jam hidup dan jam mati harus diisi'
+  }
+  return null
+}
+
 const saveParameters = async () => {
+  const formError = validateForm()
+  if (formError) {
+    notifRef.value?.showError('Input Tidak Valid', formError)
+    return
+  }
+
   isSaving.value = true
   const payload = {
     tempModeActive: tempModeActive.value,
     timeModeActive: timeModeActive.value,
-    ...settings.value
+    tempMin: Number(settings.value.tempMin),
+    tempMax: Number(settings.value.tempMax),
+    timeOn: settings.value.timeOn,
+    timeOff: settings.value.timeOff
   }
   
   try {
     const res = await api.post('/pac/settings', payload)
     mqttConnected.value = res.data.mqttConnected === true
+
+    // Parameter sudah tersimpan di database -> perbarui teks setting yang berlaku
+    activeSettings.value = {
+      tempMode: payload.tempModeActive,
+      timeMode: payload.timeModeActive,
+      tempMin: payload.tempMin,
+      tempMax: payload.tempMax,
+      timeOn: payload.timeOn,
+      timeOff: payload.timeOff
+    }
+    activeSettingsAt.value = formatNow()
 
     if (res.data.mqttConnected) {
       notifRef.value?.showSuccess('Berhasil', 'Parameter berhasil dipublish ke Controller via MQTT')
@@ -256,7 +359,7 @@ const saveParameters = async () => {
       notifRef.value?.showError('Tersimpan, Belum Tersinkron', 'Parameter tersimpan di database, tapi MQTT Broker sedang terputus - belum tentu sampai ke perangkat')
     }
   } catch (error) {
-    notifRef.value?.showError('Gagal', 'Server gagal meneruskan parameter ke MQTT Broker')
+    notifRef.value?.showError('Gagal', error.response?.data?.message || 'Server gagal meneruskan parameter ke MQTT Broker')
   } finally {
     isSaving.value = false
   }
@@ -267,9 +370,7 @@ const lastUpdated = ref('')
 let timer = null
 
 const updateTime = () => {
-  const now = new Date()
-  const pad = (num) => num.toString().padStart(2, '0')
-  lastUpdated.value = `${pad(now.getDate())}-${pad(now.getMonth() + 1)}-${now.getFullYear()} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`
+  lastUpdated.value = formatNow()
 }
 
 onMounted(() => {
