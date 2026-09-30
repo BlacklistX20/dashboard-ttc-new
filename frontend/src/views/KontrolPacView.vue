@@ -84,18 +84,14 @@
               <span v-if="activeSettings.timeMode">aktif, menyala {{ activeSettings.timeOn }} dan mati {{ activeSettings.timeOff }}</span>
               <span v-else>nonaktif</span>
             </p>
-            <p v-if="!activeSettings.tempMode && !activeSettings.timeMode" class="text-[11px] font-bold text-red-600">
-              Semua mode nonaktif: PAC dimatikan.
+            <p v-if="!tempModeActive && !timeModeActive" class="mt-1 text-[11px] font-bold text-red-600">
+              Semua mode nonaktif: PAC akan dimatikan.
             </p>
           </template>
           <p v-else class="text-[11px] text-slate-400">Belum ada data.</p>
           <p v-if="apiError && activeSettings" class="text-[9px] text-amber-700 mt-1">Gagal memuat data terbaru, menampilkan data terakhir.</p>
           <p class="text-[9px] text-slate-400 mt-1">Teks ini diperbarui tiap 60 detik dan setiap parameter baru disimpan. Isian form di atas tidak ikut berubah.</p>
         </div>
-
-        <p v-if="!tempModeActive && !timeModeActive" class="mt-2 text-[11px] font-bold text-red-600">
-          Semua mode nonaktif: PAC akan dimatikan.
-        </p>
 
       <!-- ================= BARIS 2: KARTU PARAMETER OTOMATISASI ================= -->
       <Card title="Parameter Otomatisasi PAC" bodyClass="p-2" class="border-t-4 relative overflow-hidden">
