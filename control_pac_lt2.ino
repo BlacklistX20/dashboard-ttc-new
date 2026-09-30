@@ -30,7 +30,7 @@ const char* mqtt_topic_time = "ttcsudiang/time";
 const char* LWT_PAYLOAD = "{\"device_code\":\"PAC2_1\",\"online\":false}";
 
 // --- KONFIGURASI PROTEKSI ---
-const unsigned long MIN_SWITCH_INTERVAL_MS = 30000UL; // jeda minimum ON/OFF: 30 detik
+const unsigned long MIN_SWITCH_INTERVAL_MS = 300000UL; // jeda minimum ON/OFF: 5 menit
 const unsigned long DATA_TIMEOUT_MS = 30000UL;        // data sensor/waktu basi: 30 detik
 const unsigned long RECONNECT_INTERVAL_MS = 5000UL;
 const unsigned long EVAL_INTERVAL_MS = 2000UL;
